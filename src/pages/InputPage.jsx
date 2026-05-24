@@ -3,6 +3,7 @@ import { useLanguage } from '../context/useLanguage';
 import { parseSentences, detectLanguage } from '../utils/speech';
 import { saveLesson } from '../utils/storage';
 import PhraseCard from '../components/PhraseCard';
+import ListeningTest from '../components/ListeningTest';
 
 export default function InputPage() {
   const { t } = useLanguage();
@@ -13,6 +14,7 @@ export default function InputPage() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [lessonName, setLessonName] = useState('');
   const [notification, setNotification] = useState('');
+  const [testMode, setTestMode] = useState(null);
 
   const handleParse = () => {
     if (!text.trim()) return;
@@ -50,6 +52,37 @@ export default function InputPage() {
     { value: 'ja', label: '日本語' },
     { value: 'ko', label: '한국어' },
   ];
+
+  const isArabic = detectedLang === 'ar';
+
+  if (testMode && sentences.length > 0) {
+    if (isArabic) {
+      return (
+        <div className="page input-page">
+          <div className="test-notice">
+            <p>{t('listeningTest')} - {t('arabic')}</p>
+            <p style={{ marginTop: '10px', opacity: 0.7 }}>
+              اختبار الاستماع متاح فقط للغات الأجنبية
+            </p>
+            <button className="btn btn-secondary" onClick={() => setTestMode(null)}>
+              {t('back')}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="page input-page">
+        <ListeningTest
+          sentences={sentences}
+          lang={detectedLang}
+          testType={testMode}
+          onClose={() => setTestMode(null)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="page input-page">
@@ -91,6 +124,23 @@ export default function InputPage() {
       )}
 
       {notification && <div className="notification success">{notification}</div>}
+
+      {sentences.length > 0 && !isArabic && (
+        <div className="test-buttons">
+          <button
+            className="btn btn-accent"
+            onClick={() => setTestMode('sentences')}
+          >
+            🎧 {t('sentenceListeningTest')}
+          </button>
+          <button
+            className="btn btn-accent"
+            onClick={() => setTestMode('words')}
+          >
+            🎧 {t('wordListeningTest')}
+          </button>
+        </div>
+      )}
 
       <div className="phrases-section">
         {sentences.map((sentence, index) => (

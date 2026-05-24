@@ -1,3 +1,8 @@
+import { Capacitor } from '@capacitor/core';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
+
+const isNative = Capacitor.isNativePlatform();
+
 const LANG_CODES = {
   ar: 'ar-SA',
   fr: 'fr-FR',
@@ -20,16 +25,32 @@ export function getLangCode(lang) {
   return LANG_CODES[lang] || lang;
 }
 
-export function speak(text, lang, rate = 1, onEnd = null) {
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = getLangCode(lang);
-  utterance.rate = rate;
-  if (onEnd) {
-    utterance.onend = onEnd;
+export async function speak(text, lang, rate = 1, onEnd = null) {
+  if (isNative) {
+    try {
+      await TextToSpeech.speak({
+        text,
+        lang: getLangCode(lang),
+        rate,
+        pitch: 1.0,
+        volume: 1.0,
+        category: 'ambient',
+      });
+      if (onEnd) onEnd();
+    } catch {
+      if (onEnd) onEnd();
+    }
+  } else {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = getLangCode(lang);
+    utterance.rate = rate;
+    if (onEnd) {
+      utterance.onend = onEnd;
+    }
+    window.speechSynthesis.speak(utterance);
+    return utterance;
   }
-  window.speechSynthesis.speak(utterance);
-  return utterance;
 }
 
 export function speakLoop(text, lang, rate = 1, count = 3) {
@@ -43,8 +64,16 @@ export function speakLoop(text, lang, rate = 1, count = 3) {
   speakNext();
 }
 
-export function stopSpeaking() {
-  window.speechSynthesis.cancel();
+export async function stopSpeaking() {
+  if (isNative) {
+    try {
+      await TextToSpeech.stop();
+    } catch {
+      // ignore
+    }
+  } else {
+    window.speechSynthesis.cancel();
+  }
 }
 
 export function detectLanguage(text) {
