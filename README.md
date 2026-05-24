@@ -1,16 +1,62 @@
-# React + Vite
+# تعلم اللغات - Language Learning App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+تطبيق ويب لتعلم اللغات مبني بـ React + Vite، يدعم عدة لغات مع ميزات متقدمة للنطق والترجمة والاختبار.
 
-Currently, two official plugins are available:
+## الميزات
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### إدخال النص وتحليله
+- إدخال نص بأي لغة (عربي، فرنسي، إنجليزي، إسباني، ألماني، وغيرها)
+- كشف تلقائي للغة النص
+- تحويل النص إلى عبارات منفصلة
 
-## React Compiler
+### النطق المتكرر (Loop)
+- زر نطق متكرر لكل عبارة (3 مرات)
+- زر نطق متكرر لكل كلمة
+- نطق بطيء (🐢) ونطق بسرعة عادية (🔊)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### الترجمة والمعاني
+- ترجمة كل كلمة إلى العربية والفرنسية والإنجليزية
+- عرض جميع المعاني الشائعة للكلمة
+- شرح الكلمة بثلاث لغات لترسيخها بالذهن
 
-## Expanding the ESLint configuration
+### البحث عن الصور
+- زر بحث عن صور Google Clipart لكل كلمة (🖼️)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### إدارة الدروس
+- حفظ النص كدرس مع اسم مخصص
+- عرض قائمة الدروس المحفوظة
+- حذف درس كامل مع تأكيد قبل الحذف
+- حذف جملة من درس مع تأكيد قبل الحذف
+
+### قسم الدراسة
+- عرض الدروس المحفوظة للدراسة
+- جميع ميزات النطق والترجمة متاحة
+- اختبار استماع للجمل (للغات الأجنبية فقط)
+- اختبار استماع للكلمات (للغات الأجنبية فقط)
+- نطق بطيء وعادي في الاختبارات
+- عرض النتائج مع النسبة المئوية
+
+### إعدادات التطبيق
+- واجهة التطبيق بثلاث لغات: العربية، الفرنسية، الإنجليزية
+- دعم الكتابة من اليمين لليسار (RTL) للعربية
+
+## التشغيل
+
+```bash
+npm install
+npm run dev
+```
+
+## البناء
+
+```bash
+npm run build
+```
+
+## التقنيات المستخدمة
+
+- **React 19** - مكتبة واجهة المستخدم
+- **Vite** - أداة البناء السريعة
+- **Web Speech API** - للنطق
+- **MyMemory Translation API** - للترجمة
+- **localStorage** - لحفظ الدروس
