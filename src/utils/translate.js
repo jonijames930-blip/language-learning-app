@@ -1,32 +1,29 @@
-const MYMEMORY_API = 'https://api.mymemory.translated.net/get';
+const GOOGLE_TRANSLATE_API = 'https://translate.googleapis.com/translate_a/single';
 
 export async function translateText(text, fromLang, toLang) {
   try {
-    const langMap = { ar: 'ar', fr: 'fr', en: 'en', es: 'es', de: 'de', it: 'it', pt: 'pt', ru: 'ru', zh: 'zh-CN', ja: 'ja', ko: 'ko', tr: 'tr', hi: 'hi', nl: 'nl', sv: 'sv' };
-    const from = langMap[fromLang] || fromLang;
-    const to = langMap[toLang] || toLang;
-
     const response = await fetch(
-      `${MYMEMORY_API}?q=${encodeURIComponent(text)}&langpair=${from}|${to}`
+      `${GOOGLE_TRANSLATE_API}?client=gtx&sl=${fromLang}&tl=${toLang}&dt=t&dt=at&q=${encodeURIComponent(text)}`
     );
     const data = await response.json();
 
-    if (data.responseStatus === 200 && data.responseData) {
-      const mainTranslation = data.responseData.translatedText;
-      const alternatives = data.matches
-        ? data.matches
-            .filter(m => m.translation !== mainTranslation)
-            .map(m => m.translation)
-            .filter((v, i, a) => a.indexOf(v) === i)
-            .slice(0, 5)
-        : [];
+    const mainTranslation = data[0]
+      ? data[0].map(item => item[0]).filter(Boolean).join('')
+      : text;
 
-      return {
-        translation: mainTranslation,
-        alternatives,
-      };
+    const alternatives = [];
+    if (data[5] && data[5][0] && data[5][0][2]) {
+      for (const alt of data[5][0][2]) {
+        if (alt[0] && alt[0] !== mainTranslation && alternatives.length < 5) {
+          alternatives.push(alt[0]);
+        }
+      }
     }
-    return { translation: text, alternatives: [] };
+
+    return {
+      translation: mainTranslation,
+      alternatives,
+    };
   } catch {
     return { translation: text, alternatives: [] };
   }

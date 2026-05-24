@@ -67,6 +67,7 @@ const translations = {
     detectLanguage: 'كشف اللغة',
     textLanguage: 'لغة النص',
     auto: 'تلقائي',
+    stop: 'إيقاف',
   },
   fr: {
     appTitle: 'Apprendre les langues',
@@ -136,6 +137,7 @@ const translations = {
     detectLanguage: 'Détecter la langue',
     textLanguage: 'Langue du texte',
     auto: 'Auto',
+    stop: 'Arrêter',
   },
   en: {
     appTitle: 'Language Learning',
@@ -205,6 +207,7 @@ const translations = {
     detectLanguage: 'Detect Language',
     textLanguage: 'Text Language',
     auto: 'Auto',
+    stop: 'Stop',
   },
 };
 

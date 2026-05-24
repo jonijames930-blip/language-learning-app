@@ -1,16 +1,29 @@
+import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
-import { speakLoop, stopSpeaking } from '../utils/speech';
+import { speakLoop, stopSpeaking, isLooping } from '../utils/speech';
 import { parseWords } from '../utils/speech';
 import WordCard from './WordCard';
 
 export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
   const { t } = useLanguage();
+  const [playing, setPlaying] = useState(false);
 
   const words = parseWords(sentence);
 
   const handleSpeak = (rate) => {
+    if (playing) {
+      stopSpeaking();
+      setPlaying(false);
+      return;
+    }
     stopSpeaking();
-    speakLoop(sentence, lang, rate, 3);
+    setPlaying(true);
+    speakLoop(sentence, lang, rate);
+  };
+
+  const handleStop = () => {
+    stopSpeaking();
+    setPlaying(false);
   };
 
   return (
@@ -19,18 +32,18 @@ export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
         <p className="phrase-text">{sentence}</p>
         <div className="phrase-actions">
           <button
-            className="btn-icon btn-speak-slow"
+            className={`btn-icon btn-speak-slow ${playing ? 'active-loop' : ''}`}
             onClick={() => handleSpeak(0.6)}
-            title={t('slowSpeed')}
+            title={playing ? t('stop') || 'Stop' : t('slowSpeed')}
           >
-            🐢
+            {playing ? '⏹️' : '🐢'}
           </button>
           <button
-            className="btn-icon btn-speak-normal"
+            className={`btn-icon btn-speak-normal ${playing ? 'active-loop' : ''}`}
             onClick={() => handleSpeak(1)}
-            title={t('normalSpeed')}
+            title={playing ? t('stop') || 'Stop' : t('normalSpeed')}
           >
-            🔊
+            {playing ? '⏹️' : '🔊'}
           </button>
           {showDelete && (
             <button
@@ -45,7 +58,7 @@ export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
       </div>
       <div className="words-container">
         {words.map((word, index) => (
-          <WordCard key={`${word}-${index}`} word={word} lang={lang} />
+          <WordCard key={`${word}-${index}`} word={word} lang={lang} onStopPhrase={handleStop} />
         ))}
       </div>
     </div>

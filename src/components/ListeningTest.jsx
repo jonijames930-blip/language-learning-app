@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useLanguage } from '../context/useLanguage';
-import { speak, stopSpeaking, parseWords } from '../utils/speech';
+import { speakLoop, stopSpeaking, parseWords } from '../utils/speech';
+import { playCorrectSound, playWrongSound } from '../utils/sounds';
 
 export default function ListeningTest({ sentences, lang, onClose, testType }) {
   const { t } = useLanguage();
@@ -9,6 +10,7 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
   const [showAnswer, setShowAnswer] = useState(false);
   const [results, setResults] = useState([]);
   const [testComplete, setTestComplete] = useState(false);
+  const [playing, setPlaying] = useState(false);
 
   const items =
     testType === 'words'
@@ -17,12 +19,18 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
 
   const currentItem = items[currentIndex];
 
-  const playAudio = useCallback(
+  const togglePlay = useCallback(
     (rate = 1) => {
+      if (playing) {
+        stopSpeaking();
+        setPlaying(false);
+        return;
+      }
       stopSpeaking();
-      speak(currentItem, lang, rate);
+      setPlaying(true);
+      speakLoop(currentItem, lang, rate);
     },
-    [currentItem, lang]
+    [currentItem, lang, playing]
   );
 
   const checkAnswer = () => {
@@ -34,16 +42,26 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
     ];
     setResults(newResults);
     setShowAnswer(true);
+    stopSpeaking();
+    setPlaying(false);
+
+    if (isCorrect) {
+      playCorrectSound();
+    } else {
+      playWrongSound();
+    }
   };
 
   const nextItem = () => {
     if (currentIndex + 1 >= items.length) {
       setTestComplete(true);
       stopSpeaking();
+      setPlaying(false);
     } else {
       setCurrentIndex(currentIndex + 1);
       setUserAnswer('');
       setShowAnswer(false);
+      setPlaying(false);
     }
   };
 
@@ -53,6 +71,9 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
       { item: currentItem, answer: '', correct: false },
     ];
     setResults(newResults);
+    stopSpeaking();
+    setPlaying(false);
+    playWrongSound();
     nextItem();
   };
 
@@ -62,6 +83,13 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
     setShowAnswer(false);
     setResults([]);
     setTestComplete(false);
+    setPlaying(false);
+  };
+
+  const handleClose = () => {
+    stopSpeaking();
+    setPlaying(false);
+    onClose();
   };
 
   const correctCount = results.filter(r => r.correct).length;
@@ -101,7 +129,7 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
           <button className="btn btn-primary" onClick={restartTest}>
             {t('tryAgain')}
           </button>
-          <button className="btn btn-secondary" onClick={onClose}>
+          <button className="btn btn-secondary" onClick={handleClose}>
             {t('close')}
           </button>
         </div>
@@ -119,14 +147,17 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
       </div>
 
       <div className="test-controls">
-        <button className="btn btn-speak-slow" onClick={() => playAudio(0.6)}>
-          🐢 {t('slowSpeed')}
+        <button
+          className={`btn btn-speak-slow ${playing ? 'active-loop' : ''}`}
+          onClick={() => togglePlay(0.6)}
+        >
+          {playing ? '⏹️' : '🐢'} {playing ? (t('stop') || 'Stop') : t('slowSpeed')}
         </button>
-        <button className="btn btn-speak-normal" onClick={() => playAudio(1)}>
-          🔊 {t('normalSpeed')}
-        </button>
-        <button className="btn btn-replay" onClick={() => playAudio(1)}>
-          🔄 {t('replay')}
+        <button
+          className={`btn btn-speak-normal ${playing ? 'active-loop' : ''}`}
+          onClick={() => togglePlay(1)}
+        >
+          {playing ? '⏹️' : '🔊'} {playing ? (t('stop') || 'Stop') : t('normalSpeed')}
         </button>
       </div>
 
@@ -170,7 +201,7 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
             {currentIndex + 1 >= items.length ? t('results') : t('nextWord')}
           </button>
         )}
-        <button className="btn btn-secondary" onClick={onClose}>
+        <button className="btn btn-secondary" onClick={handleClose}>
           {t('close')}
         </button>
       </div>

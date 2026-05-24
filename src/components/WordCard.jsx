@@ -3,11 +3,12 @@ import { useLanguage } from '../context/useLanguage';
 import { speakLoop, stopSpeaking } from '../utils/speech';
 import { getWordDetails, getGoogleClipArtUrl } from '../utils/translate';
 
-export default function WordCard({ word, lang }) {
+export default function WordCard({ word, lang, onStopPhrase }) {
   const { t } = useLanguage();
   const [showDetails, setShowDetails] = useState(false);
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [playing, setPlaying] = useState(false);
 
   const handleTranslate = async () => {
     if (showDetails) {
@@ -26,8 +27,15 @@ export default function WordCard({ word, lang }) {
   };
 
   const handleSpeak = (rate) => {
+    if (playing) {
+      stopSpeaking();
+      setPlaying(false);
+      return;
+    }
+    if (onStopPhrase) onStopPhrase();
     stopSpeaking();
-    speakLoop(word, lang, rate, 3);
+    setPlaying(true);
+    speakLoop(word, lang, rate);
   };
 
   const langLabels = { ar: t('inArabic'), fr: t('inFrench'), en: t('inEnglish') };
@@ -37,18 +45,18 @@ export default function WordCard({ word, lang }) {
       <span className="word-text">{word}</span>
       <span className="word-actions">
         <button
-          className="btn-icon btn-speak-slow"
+          className={`btn-icon btn-speak-slow ${playing ? 'active-loop' : ''}`}
           onClick={() => handleSpeak(0.6)}
-          title={t('slowSpeed')}
+          title={playing ? t('stop') || 'Stop' : t('slowSpeed')}
         >
-          🐢
+          {playing ? '⏹️' : '🐢'}
         </button>
         <button
-          className="btn-icon btn-speak-normal"
+          className={`btn-icon btn-speak-normal ${playing ? 'active-loop' : ''}`}
           onClick={() => handleSpeak(1)}
-          title={t('normalSpeed')}
+          title={playing ? t('stop') || 'Stop' : t('normalSpeed')}
         >
-          🔊
+          {playing ? '⏹️' : '🔊'}
         </button>
         <button
           className="btn-icon btn-image"

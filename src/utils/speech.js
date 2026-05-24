@@ -25,6 +25,8 @@ export function getLangCode(lang) {
   return LANG_CODES[lang] || lang;
 }
 
+let loopAbortController = null;
+
 export async function speak(text, lang, rate = 1, onEnd = null) {
   if (isNative) {
     try {
@@ -53,18 +55,34 @@ export async function speak(text, lang, rate = 1, onEnd = null) {
   }
 }
 
-export function speakLoop(text, lang, rate = 1, count = 3) {
-  let current = 0;
+export function speakLoop(text, lang, rate = 1) {
+  stopSpeaking();
+
+  const controller = { stopped: false };
+  loopAbortController = controller;
+
   const speakNext = () => {
-    if (current < count) {
-      current++;
-      speak(text, lang, rate, speakNext);
-    }
+    if (controller.stopped) return;
+    speak(text, lang, rate, () => {
+      if (!controller.stopped) {
+        setTimeout(() => speakNext(), 300);
+      }
+    });
   };
   speakNext();
+
+  return controller;
+}
+
+export function isLooping() {
+  return loopAbortController !== null && !loopAbortController.stopped;
 }
 
 export async function stopSpeaking() {
+  if (loopAbortController) {
+    loopAbortController.stopped = true;
+    loopAbortController = null;
+  }
   if (isNative) {
     try {
       await TextToSpeech.stop();
