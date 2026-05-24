@@ -40,3 +40,47 @@ export function deleteSentenceFromLesson(lessonId, sentenceIndex) {
 export function getLesson(lessonId) {
   return getLessons().find(l => l.id === lessonId) || null;
 }
+
+export function exportLessons() {
+  const lessons = getLessons();
+  const data = JSON.stringify(lessons, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `lessons_backup_${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export function importLessons(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const imported = JSON.parse(e.target.result);
+        if (!Array.isArray(imported)) {
+          reject(new Error('Invalid format'));
+          return;
+        }
+        const existing = getLessons();
+        const existingIds = new Set(existing.map(l => l.id));
+        let added = 0;
+        for (const lesson of imported) {
+          if (lesson.id && lesson.sentences && !existingIds.has(lesson.id)) {
+            existing.push(lesson);
+            added++;
+          }
+        }
+        localStorage.setItem(LESSONS_KEY, JSON.stringify(existing));
+        resolve(added);
+      } catch {
+        reject(new Error('Invalid JSON'));
+      }
+    };
+    reader.onerror = () => reject(new Error('Read error'));
+    reader.readAsText(file);
+  });
+}

@@ -13,7 +13,7 @@ function App() {
   const tabs = [
     { id: 'input', label: t('inputTab'), icon: '✏️' },
     { id: 'lessons', label: t('lessonsTab'), icon: '📚' },
-    { id: 'study', label: t('studyTab'), icon: '📖' },
+    { id: 'study', label: t('studyTab'), icon: '🎧' },
     { id: 'settings', label: t('settingsTab'), icon: '⚙️' },
   ];
 

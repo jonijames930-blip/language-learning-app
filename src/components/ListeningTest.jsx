@@ -10,7 +10,7 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
   const [showAnswer, setShowAnswer] = useState(false);
   const [results, setResults] = useState([]);
   const [testComplete, setTestComplete] = useState(false);
-  const [playing, setPlaying] = useState(false);
+  const [activeSpeed, setActiveSpeed] = useState(null);
 
   const items =
     testType === 'words'
@@ -21,16 +21,17 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
 
   const togglePlay = useCallback(
     (rate = 1) => {
-      if (playing) {
+      const speed = rate < 1 ? 'slow' : 'normal';
+      if (activeSpeed === speed) {
         stopSpeaking();
-        setPlaying(false);
+        setActiveSpeed(null);
         return;
       }
       stopSpeaking();
-      setPlaying(true);
+      setActiveSpeed(speed);
       speakLoop(currentItem, lang, rate);
     },
-    [currentItem, lang, playing]
+    [currentItem, lang, activeSpeed]
   );
 
   const checkAnswer = () => {
@@ -43,7 +44,7 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
     setResults(newResults);
     setShowAnswer(true);
     stopSpeaking();
-    setPlaying(false);
+    setActiveSpeed(null);
 
     if (isCorrect) {
       playCorrectSound();
@@ -56,12 +57,12 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
     if (currentIndex + 1 >= items.length) {
       setTestComplete(true);
       stopSpeaking();
-      setPlaying(false);
+      setActiveSpeed(null);
     } else {
       setCurrentIndex(currentIndex + 1);
       setUserAnswer('');
       setShowAnswer(false);
-      setPlaying(false);
+      setActiveSpeed(null);
     }
   };
 
@@ -72,7 +73,7 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
     ];
     setResults(newResults);
     stopSpeaking();
-    setPlaying(false);
+    setActiveSpeed(null);
     playWrongSound();
     nextItem();
   };
@@ -83,12 +84,12 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
     setShowAnswer(false);
     setResults([]);
     setTestComplete(false);
-    setPlaying(false);
+    setActiveSpeed(null);
   };
 
   const handleClose = () => {
     stopSpeaking();
-    setPlaying(false);
+    setActiveSpeed(null);
     onClose();
   };
 
@@ -148,16 +149,16 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
 
       <div className="test-controls">
         <button
-          className={`btn btn-speak-slow ${playing ? 'active-loop' : ''}`}
+          className={`btn btn-speak-slow ${activeSpeed === 'slow' ? 'active-loop' : ''}`}
           onClick={() => togglePlay(0.6)}
         >
-          {playing ? '⏹️' : '🐢'} {playing ? (t('stop') || 'Stop') : t('slowSpeed')}
+          {activeSpeed === 'slow' ? '⏹️' : '🐢'} {activeSpeed === 'slow' ? (t('stop') || 'Stop') : t('slowSpeed')}
         </button>
         <button
-          className={`btn btn-speak-normal ${playing ? 'active-loop' : ''}`}
+          className={`btn btn-speak-normal ${activeSpeed === 'normal' ? 'active-loop' : ''}`}
           onClick={() => togglePlay(1)}
         >
-          {playing ? '⏹️' : '🔊'} {playing ? (t('stop') || 'Stop') : t('normalSpeed')}
+          {activeSpeed === 'normal' ? '⏹️' : '🔊'} {activeSpeed === 'normal' ? (t('stop') || 'Stop') : t('normalSpeed')}
         </button>
       </div>
 

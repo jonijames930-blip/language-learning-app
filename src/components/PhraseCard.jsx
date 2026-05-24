@@ -1,29 +1,30 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
-import { speakLoop, stopSpeaking, isLooping } from '../utils/speech';
+import { speakLoop, stopSpeaking } from '../utils/speech';
 import { parseWords } from '../utils/speech';
 import WordCard from './WordCard';
 
 export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
   const { t } = useLanguage();
-  const [playing, setPlaying] = useState(false);
+  const [activeSpeed, setActiveSpeed] = useState(null);
 
   const words = parseWords(sentence);
 
   const handleSpeak = (rate) => {
-    if (playing) {
+    const speed = rate < 1 ? 'slow' : 'normal';
+    if (activeSpeed === speed) {
       stopSpeaking();
-      setPlaying(false);
+      setActiveSpeed(null);
       return;
     }
     stopSpeaking();
-    setPlaying(true);
+    setActiveSpeed(speed);
     speakLoop(sentence, lang, rate);
   };
 
   const handleStop = () => {
     stopSpeaking();
-    setPlaying(false);
+    setActiveSpeed(null);
   };
 
   return (
@@ -32,18 +33,18 @@ export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
         <p className="phrase-text">{sentence}</p>
         <div className="phrase-actions">
           <button
-            className={`btn-icon btn-speak-slow ${playing ? 'active-loop' : ''}`}
+            className={`btn-icon btn-speak-slow ${activeSpeed === 'slow' ? 'active-loop' : ''}`}
             onClick={() => handleSpeak(0.6)}
-            title={playing ? t('stop') || 'Stop' : t('slowSpeed')}
+            title={activeSpeed === 'slow' ? t('stop') || 'Stop' : t('slowSpeed')}
           >
-            {playing ? '⏹️' : '🐢'}
+            {activeSpeed === 'slow' ? '⏹️' : '🐢'}
           </button>
           <button
-            className={`btn-icon btn-speak-normal ${playing ? 'active-loop' : ''}`}
+            className={`btn-icon btn-speak-normal ${activeSpeed === 'normal' ? 'active-loop' : ''}`}
             onClick={() => handleSpeak(1)}
-            title={playing ? t('stop') || 'Stop' : t('normalSpeed')}
+            title={activeSpeed === 'normal' ? t('stop') || 'Stop' : t('normalSpeed')}
           >
-            {playing ? '⏹️' : '🔊'}
+            {activeSpeed === 'normal' ? '⏹️' : '🔊'}
           </button>
           {showDelete && (
             <button

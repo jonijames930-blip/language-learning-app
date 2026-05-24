@@ -1,20 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { parseSentences, detectLanguage } from '../utils/speech';
 import { saveLesson } from '../utils/storage';
 import PhraseCard from '../components/PhraseCard';
 import ListeningTest from '../components/ListeningTest';
 
+const INPUT_TEXT_KEY = 'input_text';
+const INPUT_LANG_KEY = 'input_lang';
+const INPUT_SENTENCES_KEY = 'input_sentences';
+const INPUT_DETECTED_LANG_KEY = 'input_detected_lang';
+
 export default function InputPage() {
   const { t } = useLanguage();
-  const [text, setText] = useState('');
-  const [sentences, setSentences] = useState([]);
-  const [detectedLang, setDetectedLang] = useState('');
-  const [selectedLang, setSelectedLang] = useState('auto');
+  const [text, setText] = useState(() => localStorage.getItem(INPUT_TEXT_KEY) || '');
+  const [sentences, setSentences] = useState(() => {
+    try {
+      const saved = localStorage.getItem(INPUT_SENTENCES_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [detectedLang, setDetectedLang] = useState(() => localStorage.getItem(INPUT_DETECTED_LANG_KEY) || '');
+  const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem(INPUT_LANG_KEY) || 'auto');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [lessonName, setLessonName] = useState('');
   const [notification, setNotification] = useState('');
   const [testMode, setTestMode] = useState(null);
+
+  useEffect(() => {
+    localStorage.setItem(INPUT_TEXT_KEY, text);
+  }, [text]);
+
+  useEffect(() => {
+    localStorage.setItem(INPUT_LANG_KEY, selectedLang);
+  }, [selectedLang]);
+
+  useEffect(() => {
+    localStorage.setItem(INPUT_SENTENCES_KEY, JSON.stringify(sentences));
+  }, [sentences]);
+
+  useEffect(() => {
+    localStorage.setItem(INPUT_DETECTED_LANG_KEY, detectedLang);
+  }, [detectedLang]);
 
   const handleParse = () => {
     if (!text.trim()) return;
@@ -22,6 +48,12 @@ export default function InputPage() {
     setSentences(parsed);
     const lang = selectedLang === 'auto' ? detectLanguage(text) : selectedLang;
     setDetectedLang(lang);
+  };
+
+  const handleClearText = () => {
+    setText('');
+    setSentences([]);
+    setDetectedLang('');
   };
 
   const handleSave = () => {
@@ -98,13 +130,24 @@ export default function InputPage() {
             ))}
           </select>
         </div>
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={t('enterText')}
-          rows={6}
-          className="text-input"
-        />
+        <div className="textarea-wrapper">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={t('enterText')}
+            rows={6}
+            className="text-input"
+          />
+          {text && (
+            <button
+              className="btn-clear-text"
+              onClick={handleClearText}
+              title={t('clearText')}
+            >
+              ✕
+            </button>
+          )}
+        </div>
         <div className="input-actions">
           <button className="btn btn-primary" onClick={handleParse}>
             {t('parseText')}

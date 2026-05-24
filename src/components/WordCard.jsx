@@ -8,7 +8,7 @@ export default function WordCard({ word, lang, onStopPhrase }) {
   const [showDetails, setShowDetails] = useState(false);
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [playing, setPlaying] = useState(false);
+  const [activeSpeed, setActiveSpeed] = useState(null);
 
   const handleTranslate = async () => {
     if (showDetails) {
@@ -27,14 +27,15 @@ export default function WordCard({ word, lang, onStopPhrase }) {
   };
 
   const handleSpeak = (rate) => {
-    if (playing) {
+    const speed = rate < 1 ? 'slow' : 'normal';
+    if (activeSpeed === speed) {
       stopSpeaking();
-      setPlaying(false);
+      setActiveSpeed(null);
       return;
     }
     if (onStopPhrase) onStopPhrase();
     stopSpeaking();
-    setPlaying(true);
+    setActiveSpeed(speed);
     speakLoop(word, lang, rate);
   };
 
@@ -45,18 +46,18 @@ export default function WordCard({ word, lang, onStopPhrase }) {
       <span className="word-text">{word}</span>
       <span className="word-actions">
         <button
-          className={`btn-icon btn-speak-slow ${playing ? 'active-loop' : ''}`}
+          className={`btn-icon btn-speak-slow ${activeSpeed === 'slow' ? 'active-loop' : ''}`}
           onClick={() => handleSpeak(0.6)}
-          title={playing ? t('stop') || 'Stop' : t('slowSpeed')}
+          title={activeSpeed === 'slow' ? t('stop') || 'Stop' : t('slowSpeed')}
         >
-          {playing ? '⏹️' : '🐢'}
+          {activeSpeed === 'slow' ? '⏹️' : '🐢'}
         </button>
         <button
-          className={`btn-icon btn-speak-normal ${playing ? 'active-loop' : ''}`}
+          className={`btn-icon btn-speak-normal ${activeSpeed === 'normal' ? 'active-loop' : ''}`}
           onClick={() => handleSpeak(1)}
-          title={playing ? t('stop') || 'Stop' : t('normalSpeed')}
+          title={activeSpeed === 'normal' ? t('stop') || 'Stop' : t('normalSpeed')}
         >
-          {playing ? '⏹️' : '🔊'}
+          {activeSpeed === 'normal' ? '⏹️' : '🔊'}
         </button>
         <button
           className="btn-icon btn-image"
