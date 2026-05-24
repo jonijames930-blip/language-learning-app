@@ -1,7 +1,20 @@
-import { Capacitor } from '@capacitor/core';
-import { TextToSpeech } from '@capacitor-community/text-to-speech';
+let nativeTTS = null;
+let isNative = false;
 
-const isNative = Capacitor.isNativePlatform();
+async function initNativeTTS() {
+  try {
+    const { Capacitor } = await import('@capacitor/core');
+    if (Capacitor.isNativePlatform()) {
+      isNative = true;
+      const { TextToSpeech } = await import('@capacitor-community/text-to-speech');
+      nativeTTS = TextToSpeech;
+    }
+  } catch {
+    isNative = false;
+  }
+}
+
+const ttsReady = initNativeTTS();
 
 const LANG_CODES = {
   ar: 'ar-SA',
@@ -27,31 +40,56 @@ export function getLangCode(lang) {
 
 let loopAbortController = null;
 
+function speakWeb(text, lang, rate, onEnd) {
+  try {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = getLangCode(lang);
+      utterance.rate = rate;
+      if (onEnd) {
+        utterance.onend = onEnd;
+        utterance.onerror = onEnd;
+      }
+      window.speechSynthesis.speak(utterance);
+      return true;
+    }
+  } catch {
+    // web speech not available
+  }
+  return false;
+}
+
+async function speakNative(text, lang, rate) {
+  await ttsReady;
+  if (!nativeTTS) throw new Error('Native TTS not available');
+  await nativeTTS.speak({
+    text,
+    lang: getLangCode(lang),
+    rate,
+    pitch: 1.0,
+    volume: 1.0,
+    category: 'ambient',
+  });
+}
+
 export async function speak(text, lang, rate = 1, onEnd = null) {
-  if (isNative) {
-    try {
-      await TextToSpeech.speak({
-        text,
-        lang: getLangCode(lang),
-        rate,
-        pitch: 1.0,
-        volume: 1.0,
-        category: 'ambient',
-      });
-      if (onEnd) onEnd();
-    } catch {
-      if (onEnd) onEnd();
+  try {
+    if (isNative && nativeTTS) {
+      try {
+        await speakNative(text, lang, rate);
+        if (onEnd) onEnd();
+        return;
+      } catch {
+        // native failed, try web
+      }
     }
-  } else {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = getLangCode(lang);
-    utterance.rate = rate;
-    if (onEnd) {
-      utterance.onend = onEnd;
+    const webWorked = speakWeb(text, lang, rate, onEnd);
+    if (!webWorked && onEnd) {
+      onEnd();
     }
-    window.speechSynthesis.speak(utterance);
-    return utterance;
+  } catch {
+    if (onEnd) onEnd();
   }
 }
 
@@ -83,14 +121,19 @@ export async function stopSpeaking() {
     loopAbortController.stopped = true;
     loopAbortController = null;
   }
-  if (isNative) {
-    try {
-      await TextToSpeech.stop();
-    } catch {
-      // ignore
+  try {
+    if (nativeTTS) {
+      await nativeTTS.stop();
     }
-  } else {
-    window.speechSynthesis.cancel();
+  } catch {
+    // ignore
+  }
+  try {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  } catch {
+    // ignore
   }
 }
 
