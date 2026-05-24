@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: '/language-learning-app/',
+  base: './',
   plugins: [
     react(),
     VitePWA({
@@ -17,23 +17,23 @@ export default defineConfig({
         background_color: '#f8fafc',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/language-learning-app/',
-        start_url: '/language-learning-app/',
+        scope: '/',
+        start_url: '/',
         dir: 'rtl',
         lang: 'ar',
         icons: [
           {
-            src: '/language-learning-app/icons/icon-192x192.png',
+            src: '/icons/icon-192x192.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: '/language-learning-app/icons/icon-512x512.png',
+            src: '/icons/icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
           },
           {
-            src: '/language-learning-app/icons/icon-512x512.png',
+            src: '/icons/icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable',
