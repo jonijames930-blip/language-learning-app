@@ -74,6 +74,7 @@ export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
       {showDrawing && (
         <DrawingCanvas
           phrase={sentence}
+          storageKey={`phrase_${sentence.slice(0, 50)}`}
           onClose={() => setShowDrawing(false)}
         />
       )}

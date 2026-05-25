@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { speakLoop, stopSpeaking } from '../utils/speech';
 import { getWordDetails, getCommonPhrases, getGoogleClipArtUrl } from '../utils/translate';
+import DrawingCanvas from './DrawingCanvas';
 
 export default function WordCard({ word, lang, onStopPhrase }) {
   const { t } = useLanguage();
@@ -14,6 +15,7 @@ export default function WordCard({ word, lang, onStopPhrase }) {
   const [phrasesLoading, setPhrasesLoading] = useState(false);
   const [phraseLoopId, setPhraseLoopId] = useState(null);
   const [transLoopId, setTransLoopId] = useState(null);
+  const [showDrawing, setShowDrawing] = useState(false);
 
   const stopAll = () => {
     stopSpeaking();
@@ -139,6 +141,13 @@ export default function WordCard({ word, lang, onStopPhrase }) {
             {phrasesLoading ? '⏳' : '💬'}
           </button>
         )}
+        <button
+          className="btn-icon btn-draw"
+          onClick={() => setShowDrawing(true)}
+          title={t('draw') || 'Draw'}
+        >
+          🖊️
+        </button>
       </span>
 
       {showDetails && details && (
@@ -200,6 +209,13 @@ export default function WordCard({ word, lang, onStopPhrase }) {
             {t('close')}
           </button>
         </div>
+      )}
+      {showDrawing && (
+        <DrawingCanvas
+          phrase={word}
+          storageKey={`word_${word}`}
+          onClose={() => setShowDrawing(false)}
+        />
       )}
     </span>
   );

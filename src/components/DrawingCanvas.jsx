@@ -3,8 +3,28 @@ import { useLanguage } from '../context/useLanguage';
 
 const COLORS = ['#000000', '#e53e3e', '#3182ce', '#38a169', '#d69e2e', '#805ad5', '#dd6b20', '#ffffff'];
 const SIZES = [2, 4, 8, 12, 20];
+const DRAWINGS_KEY = 'saved_drawings';
 
-export default function DrawingCanvas({ onClose, phrase }) {
+function loadDrawing(key) {
+  try {
+    const all = JSON.parse(localStorage.getItem(DRAWINGS_KEY) || '{}');
+    return all[key] || null;
+  } catch {
+    return null;
+  }
+}
+
+function persistDrawing(key, dataUrl) {
+  try {
+    const all = JSON.parse(localStorage.getItem(DRAWINGS_KEY) || '{}');
+    all[key] = dataUrl;
+    localStorage.setItem(DRAWINGS_KEY, JSON.stringify(all));
+  } catch {
+    // storage full - ignore
+  }
+}
+
+export default function DrawingCanvas({ onClose, phrase, storageKey }) {
   const { t } = useLanguage();
   const canvasRef = useRef(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -24,7 +44,10 @@ export default function DrawingCanvas({ onClose, phrase }) {
       return newHistory;
     });
     setHistoryIdx(prev => prev + 1);
-  }, [historyIdx]);
+    if (storageKey) {
+      persistDrawing(storageKey, data);
+    }
+  }, [historyIdx, storageKey]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -33,15 +56,30 @@ export default function DrawingCanvas({ onClose, phrase }) {
     canvas.width = parent.clientWidth;
     canvas.height = Math.max(parent.clientHeight - 10, 300);
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    if (phrase) {
-      ctx.fillStyle = '#e2e8f0';
-      ctx.font = '18px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(phrase, canvas.width / 2, 30);
+
+    const saved = storageKey ? loadDrawing(storageKey) : null;
+    if (saved) {
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const data = canvas.toDataURL();
+        setHistory([data]);
+        setHistoryIdx(0);
+      };
+      img.src = saved;
+    } else {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      if (phrase) {
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = '18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(phrase, canvas.width / 2, 30);
+      }
+      const data = canvas.toDataURL();
+      setHistory([data]);
+      setHistoryIdx(0);
     }
-    saveState();
   }, []);
 
   const getPos = (e) => {
@@ -109,6 +147,9 @@ export default function DrawingCanvas({ onClose, phrase }) {
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
+      if (storageKey) {
+        persistDrawing(storageKey, history[newIdx]);
+      }
     };
     img.src = history[newIdx];
   };
