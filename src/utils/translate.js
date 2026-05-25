@@ -95,14 +95,14 @@ export async function getCommonPhrases(word, wordLang) {
     if (phrases.length === 0) {
       const templates = wordLang === 'fr'
         ? [
-            `J'utilise le mot "${word}" souvent`,
-            `Le "${word}" est très important`,
-            `Je cherche "${word}" partout`,
+            `Pouvez-vous expliquer le mot "${word}"`,
+            `Je cherche des exemples pour "${word}"`,
+            `J'essaye de retenir le mot "${word}"`,
           ]
         : [
-            `I use the word "${word}" often`,
-            `The "${word}" is very important`,
-            `I am looking for "${word}"`,
+            `Can you explain the word "${word}"`,
+            `I am looking for examples of "${word}"`,
+            `I am trying to remember the word "${word}"`,
           ];
       for (const tmpl of templates) {
         phrases.push({ text: tmpl, lang: wordLang });

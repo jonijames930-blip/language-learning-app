@@ -13,10 +13,19 @@ export default function WordCard({ word, lang, onStopPhrase }) {
   const [phrases, setPhrases] = useState(null);
   const [phrasesLoading, setPhrasesLoading] = useState(false);
   const [phraseLoopId, setPhraseLoopId] = useState(null);
+  const [transLoopId, setTransLoopId] = useState(null);
+
+  const stopAll = () => {
+    stopSpeaking();
+    setActiveSpeed(null);
+    setPhraseLoopId(null);
+    setTransLoopId(null);
+  };
 
   const handleTranslate = async () => {
     if (showDetails) {
       setShowDetails(false);
+      stopAll();
       return;
     }
     setLoading(true);
@@ -33,21 +42,29 @@ export default function WordCard({ word, lang, onStopPhrase }) {
   const handleSpeak = (rate) => {
     const speed = rate < 1 ? 'slow' : 'normal';
     if (activeSpeed === speed) {
-      stopSpeaking();
-      setActiveSpeed(null);
+      stopAll();
       return;
     }
     if (onStopPhrase) onStopPhrase();
-    stopSpeaking();
+    stopAll();
     setActiveSpeed(speed);
     speakLoop(word, lang, rate);
+  };
+
+  const handleTransSpeak = (text, transLang, key) => {
+    if (transLoopId === key) {
+      stopAll();
+      return;
+    }
+    stopAll();
+    setTransLoopId(key);
+    speakLoop(text, transLang, 1);
   };
 
   const handlePhrases = async () => {
     if (showPhrases) {
       setShowPhrases(false);
-      stopSpeaking();
-      setPhraseLoopId(null);
+      stopAll();
       return;
     }
     if (lang === 'ar') return;
@@ -64,12 +81,10 @@ export default function WordCard({ word, lang, onStopPhrase }) {
 
   const handlePhraseSpeak = (phraseText, phraseLang, index) => {
     if (phraseLoopId === index) {
-      stopSpeaking();
-      setPhraseLoopId(null);
+      stopAll();
       return;
     }
-    stopSpeaking();
-    setActiveSpeed(null);
+    stopAll();
     setPhraseLoopId(index);
     speakLoop(phraseText, phraseLang, 1);
   };
@@ -131,7 +146,16 @@ export default function WordCard({ word, lang, onStopPhrase }) {
           {targetLangs.map(targetLang => (
             details[targetLang] && (
               <div key={targetLang} className="translation-block">
-                <h4>{langLabels[targetLang]}</h4>
+                <div className="translation-header">
+                  <h4>{langLabels[targetLang]}</h4>
+                  <button
+                    className={`btn-icon btn-icon-sm ${transLoopId === targetLang ? 'active-loop' : ''}`}
+                    onClick={() => handleTransSpeak(details[targetLang].translation, targetLang, targetLang)}
+                    title={transLoopId === targetLang ? t('stop') || 'Stop' : t('normalSpeed')}
+                  >
+                    {transLoopId === targetLang ? '⏹️' : '🔊'}
+                  </button>
+                </div>
                 <p className="main-translation">{details[targetLang].translation}</p>
                 {details[targetLang].meanings && details[targetLang].meanings.length > 1 && (
                   <div className="meanings">
@@ -146,7 +170,7 @@ export default function WordCard({ word, lang, onStopPhrase }) {
               </div>
             )
           ))}
-          <button className="btn-close-details" onClick={() => setShowDetails(false)}>
+          <button className="btn-close-details" onClick={() => { setShowDetails(false); stopAll(); }}>
             {t('close')}
           </button>
         </div>
@@ -172,7 +196,7 @@ export default function WordCard({ word, lang, onStopPhrase }) {
               )}
             </div>
           ))}
-          <button className="btn-close-details" onClick={() => { setShowPhrases(false); stopSpeaking(); setPhraseLoopId(null); }}>
+          <button className="btn-close-details" onClick={() => { setShowPhrases(false); stopAll(); }}>
             {t('close')}
           </button>
         </div>
