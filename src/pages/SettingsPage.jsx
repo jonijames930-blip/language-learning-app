@@ -13,9 +13,13 @@ export default function SettingsPage() {
     { code: 'en', name: t('english'), native: 'English' },
   ];
 
-  const handleExport = () => {
-    exportLessons();
-    setNotification(t('exportSuccess'));
+  const handleExport = async () => {
+    try {
+      await exportLessons();
+      setNotification(t('exportSuccess'));
+    } catch {
+      setNotification(t('exportError') || 'Export failed');
+    }
     setTimeout(() => setNotification(''), 3000);
   };
 

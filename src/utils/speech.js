@@ -137,25 +137,27 @@ export async function stopSpeaking() {
   }
 }
 
-export function detectLanguage(text) {
-  const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
-  const frenchSpecial = /[àâçéèêëïîôùûüÿœæ]/i;
-  const cjkRegex = /[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF]/;
-  const cyrillicRegex = /[\u0400-\u04FF]/;
-  const koreanRegex = /[\uAC00-\uD7AF]/;
-  const devanagariRegex = /[\u0900-\u097F]/;
+const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/;
+const frenchSpecial = /[àâçéèêëïîôùûüÿœæ]/i;
+const cjkRegex = /[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF]/;
+const cyrillicRegex = /[\u0400-\u04FF]/;
+const koreanRegex = /[\uAC00-\uD7AF]/;
+const devanagariRegex = /[\u0900-\u097F]/;
+const japaneseRegex = /[\u3040-\u309F\u30A0-\u30FF]/;
 
+const frenchWords = ['le', 'la', 'les', 'de', 'du', 'des', 'un', 'une', 'est', 'sont', 'dans', 'pour', 'avec', 'sur', 'que', 'qui', 'ce', 'cette', 'nous', 'vous', 'ils', 'elles', 'je', 'tu', 'il', 'elle', 'mon', 'ton', 'son', 'mes', 'tes', 'ses', 'notre', 'votre', 'leur'];
+const spanishWords = ['el', 'la', 'los', 'las', 'de', 'del', 'en', 'es', 'son', 'un', 'una', 'que', 'por', 'con', 'para', 'como', 'pero', 'más', 'este', 'esta', 'estos', 'yo', 'tú', 'él', 'ella', 'nosotros'];
+const germanWords = ['der', 'die', 'das', 'ein', 'eine', 'ist', 'sind', 'und', 'oder', 'aber', 'mit', 'für', 'auf', 'von', 'den', 'dem', 'des', 'nicht', 'ich', 'du', 'er', 'sie', 'wir'];
+const italianWords = ['il', 'lo', 'la', 'le', 'gli', 'un', 'una', 'di', 'del', 'della', 'che', 'è', 'sono', 'per', 'con', 'come', 'ma', 'non', 'io', 'tu', 'lui', 'lei', 'noi'];
+const turkishWords = ['bir', 've', 'bu', 'için', 'ile', 'olan', 'var', 'çok', 'gibi', 'daha', 'sonra', 'ben', 'sen', 'biz', 'siz', 'onlar'];
+
+export function detectLanguage(text) {
   if (arabicRegex.test(text)) return 'ar';
+  if (japaneseRegex.test(text)) return 'ja';
   if (cjkRegex.test(text)) return 'zh';
   if (cyrillicRegex.test(text)) return 'ru';
   if (koreanRegex.test(text)) return 'ko';
   if (devanagariRegex.test(text)) return 'hi';
-
-  const frenchWords = ['le', 'la', 'les', 'de', 'du', 'des', 'un', 'une', 'est', 'sont', 'dans', 'pour', 'avec', 'sur', 'que', 'qui', 'ce', 'cette', 'nous', 'vous', 'ils', 'elles', 'je', 'tu', 'il', 'elle', 'mon', 'ton', 'son', 'mes', 'tes', 'ses', 'notre', 'votre', 'leur'];
-  const spanishWords = ['el', 'la', 'los', 'las', 'de', 'del', 'en', 'es', 'son', 'un', 'una', 'que', 'por', 'con', 'para', 'como', 'pero', 'más', 'este', 'esta', 'estos', 'yo', 'tú', 'él', 'ella', 'nosotros'];
-  const germanWords = ['der', 'die', 'das', 'ein', 'eine', 'ist', 'sind', 'und', 'oder', 'aber', 'mit', 'für', 'auf', 'von', 'den', 'dem', 'des', 'nicht', 'ich', 'du', 'er', 'sie', 'wir'];
-  const italianWords = ['il', 'lo', 'la', 'le', 'gli', 'un', 'una', 'di', 'del', 'della', 'che', 'è', 'sono', 'per', 'con', 'come', 'ma', 'non', 'io', 'tu', 'lui', 'lei', 'noi'];
-  const turkishWords = ['bir', 've', 'bu', 'için', 'ile', 'olan', 'var', 'çok', 'gibi', 'daha', 'sonra', 'ben', 'sen', 'biz', 'siz', 'onlar'];
 
   const words = text.toLowerCase().split(/\s+/);
   const countMatches = (wordList) => words.filter(w => wordList.includes(w)).length;
@@ -176,11 +178,40 @@ export function detectLanguage(text) {
   return 'en';
 }
 
+export function detectWordLanguage(word) {
+  const cleaned = word.trim();
+  if (!cleaned) return 'en';
+  if (arabicRegex.test(cleaned)) return 'ar';
+  if (japaneseRegex.test(cleaned)) return 'ja';
+  if (cjkRegex.test(cleaned)) return 'zh';
+  if (cyrillicRegex.test(cleaned)) return 'ru';
+  if (koreanRegex.test(cleaned)) return 'ko';
+  if (devanagariRegex.test(cleaned)) return 'hi';
+  if (frenchSpecial.test(cleaned)) return 'fr';
+  return null;
+}
+
 export function parseSentences(text) {
   return text
     .split(/[.!?。！？\n]+/)
     .map(s => s.trim())
     .filter(s => s.length > 0);
+}
+
+export function parseSentencesWithLang(text, overrideLang) {
+  const raw = parseSentences(text);
+  return raw.map(s => ({
+    text: s,
+    lang: overrideLang && overrideLang !== 'auto' ? overrideLang : detectLanguage(s),
+  }));
+}
+
+export function parseWordsWithLang(sentence, phraseLang) {
+  const words = parseWords(sentence);
+  return words.map(w => {
+    const wordLang = detectWordLanguage(w);
+    return { text: w, lang: wordLang || phraseLang };
+  });
 }
 
 export function parseWords(sentence) {

@@ -1,8 +1,16 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { getLessons } from '../utils/storage';
+import { detectLanguage } from '../utils/speech';
 import PhraseCard from '../components/PhraseCard';
 import ListeningTest from '../components/ListeningTest';
+
+function buildPhrases(lesson) {
+  return lesson.sentences.map((s, i) => ({
+    text: s,
+    lang: lesson.phraseLangs?.[i] || detectLanguage(s),
+  }));
+}
 
 export default function StudyPage() {
   const { t } = useLanguage();
@@ -11,8 +19,10 @@ export default function StudyPage() {
   const [testMode, setTestMode] = useState(null);
 
   if (testMode && selectedLesson) {
-    const isArabic = selectedLesson.lang === 'ar';
-    if (isArabic) {
+    const phrases = buildPhrases(selectedLesson);
+    const nonArabic = phrases.filter(p => p.lang !== 'ar');
+
+    if (nonArabic.length === 0) {
       return (
         <div className="page study-page">
           <div className="test-notice">
@@ -31,8 +41,7 @@ export default function StudyPage() {
     return (
       <div className="page study-page">
         <ListeningTest
-          sentences={selectedLesson.sentences}
-          lang={selectedLesson.lang}
+          phrases={nonArabic}
           testType={testMode}
           onClose={() => setTestMode(null)}
         />
@@ -41,7 +50,8 @@ export default function StudyPage() {
   }
 
   if (selectedLesson) {
-    const isArabic = selectedLesson.lang === 'ar';
+    const phrases = buildPhrases(selectedLesson);
+    const hasNonArabic = phrases.some(p => p.lang !== 'ar');
 
     return (
       <div className="page study-page">
@@ -50,10 +60,9 @@ export default function StudyPage() {
             ← {t('back')}
           </button>
           <h2>{selectedLesson.name}</h2>
-          <span className="lesson-lang">{selectedLesson.lang?.toUpperCase()}</span>
         </div>
 
-        {!isArabic && (
+        {hasNonArabic && (
           <div className="test-buttons">
             <button
               className="btn btn-accent"
@@ -71,11 +80,11 @@ export default function StudyPage() {
         )}
 
         <div className="phrases-section">
-          {selectedLesson.sentences.map((sentence, index) => (
+          {phrases.map((phrase, index) => (
             <PhraseCard
-              key={`${sentence}-${index}`}
-              sentence={sentence}
-              lang={selectedLesson.lang}
+              key={`${phrase.text}-${index}`}
+              sentence={phrase.text}
+              lang={phrase.lang}
               showDelete={false}
             />
           ))}
@@ -104,7 +113,7 @@ export default function StudyPage() {
               <div className="lesson-info">
                 <h3>{lesson.name}</h3>
                 <span className="lesson-meta">
-                  {lesson.sentences.length} {t('phrases')} • {lesson.lang?.toUpperCase()}
+                  {lesson.sentences.length} {t('phrases')}
                 </span>
               </div>
               <div className="lesson-actions">

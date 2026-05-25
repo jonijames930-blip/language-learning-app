@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../context/useLanguage';
-import { parseSentences, detectLanguage } from '../utils/speech';
+import { parseSentencesWithLang } from '../utils/speech';
 import { saveLesson } from '../utils/storage';
 import PhraseCard from '../components/PhraseCard';
 import ListeningTest from '../components/ListeningTest';
@@ -8,18 +8,24 @@ import ListeningTest from '../components/ListeningTest';
 const INPUT_TEXT_KEY = 'input_text';
 const INPUT_LANG_KEY = 'input_lang';
 const INPUT_SENTENCES_KEY = 'input_sentences';
-const INPUT_DETECTED_LANG_KEY = 'input_detected_lang';
 
 export default function InputPage() {
   const { t } = useLanguage();
   const [text, setText] = useState(() => localStorage.getItem(INPUT_TEXT_KEY) || '');
-  const [sentences, setSentences] = useState(() => {
+  const [phrases, setPhrases] = useState(() => {
     try {
       const saved = localStorage.getItem(INPUT_SENTENCES_KEY);
-      return saved ? JSON.parse(saved) : [];
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        if (typeof parsed[0] === 'string') {
+          return parsed.map(s => ({ text: s, lang: 'en' }));
+        }
+        return parsed;
+      }
+      return [];
     } catch { return []; }
   });
-  const [detectedLang, setDetectedLang] = useState(() => localStorage.getItem(INPUT_DETECTED_LANG_KEY) || '');
   const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem(INPUT_LANG_KEY) || 'auto');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [lessonName, setLessonName] = useState('');
@@ -35,33 +41,28 @@ export default function InputPage() {
   }, [selectedLang]);
 
   useEffect(() => {
-    localStorage.setItem(INPUT_SENTENCES_KEY, JSON.stringify(sentences));
-  }, [sentences]);
-
-  useEffect(() => {
-    localStorage.setItem(INPUT_DETECTED_LANG_KEY, detectedLang);
-  }, [detectedLang]);
+    localStorage.setItem(INPUT_SENTENCES_KEY, JSON.stringify(phrases));
+  }, [phrases]);
 
   const handleParse = () => {
     if (!text.trim()) return;
-    const parsed = parseSentences(text);
-    setSentences(parsed);
-    const lang = selectedLang === 'auto' ? detectLanguage(text) : selectedLang;
-    setDetectedLang(lang);
+    const overrideLang = selectedLang === 'auto' ? null : selectedLang;
+    const parsed = parseSentencesWithLang(text, overrideLang);
+    setPhrases(parsed);
   };
 
   const handleClearText = () => {
     setText('');
-    setSentences([]);
-    setDetectedLang('');
+    setPhrases([]);
   };
 
   const handleSave = () => {
-    if (!lessonName.trim() || sentences.length === 0) return;
+    if (!lessonName.trim() || phrases.length === 0) return;
     saveLesson({
       name: lessonName,
-      sentences,
-      lang: detectedLang,
+      sentences: phrases.map(p => p.text),
+      phraseLangs: phrases.map(p => p.lang),
+      lang: phrases[0]?.lang || 'en',
     });
     setShowSaveModal(false);
     setLessonName('');
@@ -85,10 +86,10 @@ export default function InputPage() {
     { value: 'ko', label: '한국어' },
   ];
 
-  const isArabic = detectedLang === 'ar';
+  const hasNonArabic = phrases.some(p => p.lang !== 'ar');
 
-  if (testMode && sentences.length > 0) {
-    if (isArabic) {
+  if (testMode && phrases.length > 0) {
+    if (!hasNonArabic) {
       return (
         <div className="page input-page">
           <div className="test-notice">
@@ -104,11 +105,11 @@ export default function InputPage() {
       );
     }
 
+    const nonArabicPhrases = phrases.filter(p => p.lang !== 'ar');
     return (
       <div className="page input-page">
         <ListeningTest
-          sentences={sentences}
-          lang={detectedLang}
+          phrases={nonArabicPhrases}
           testType={testMode}
           onClose={() => setTestMode(null)}
         />
@@ -152,7 +153,7 @@ export default function InputPage() {
           <button className="btn btn-primary" onClick={handleParse}>
             {t('parseText')}
           </button>
-          {sentences.length > 0 && (
+          {phrases.length > 0 && (
             <button className="btn btn-success" onClick={() => setShowSaveModal(true)}>
               {t('saveLesson')}
             </button>
@@ -160,15 +161,9 @@ export default function InputPage() {
         </div>
       </div>
 
-      {detectedLang && sentences.length > 0 && (
-        <div className="detected-lang">
-          {t('detectLanguage')}: <strong>{detectedLang.toUpperCase()}</strong>
-        </div>
-      )}
-
       {notification && <div className="notification success">{notification}</div>}
 
-      {sentences.length > 0 && !isArabic && (
+      {phrases.length > 0 && hasNonArabic && (
         <div className="test-buttons">
           <button
             className="btn btn-accent"
@@ -186,11 +181,11 @@ export default function InputPage() {
       )}
 
       <div className="phrases-section">
-        {sentences.map((sentence, index) => (
+        {phrases.map((phrase, index) => (
           <PhraseCard
-            key={`${sentence}-${index}`}
-            sentence={sentence}
-            lang={detectedLang}
+            key={`${phrase.text}-${index}`}
+            sentence={phrase.text}
+            lang={phrase.lang}
             showDelete={false}
           />
         ))}

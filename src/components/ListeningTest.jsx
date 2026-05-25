@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { useLanguage } from '../context/useLanguage';
-import { speakLoop, stopSpeaking, parseWords } from '../utils/speech';
+import { speakLoop, stopSpeaking, parseWordsWithLang } from '../utils/speech';
 import { playCorrectSound, playWrongSound } from '../utils/sounds';
 
-export default function ListeningTest({ sentences, lang, onClose, testType }) {
+export default function ListeningTest({ phrases, onClose, testType }) {
   const { t } = useLanguage();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState('');
@@ -14,8 +14,8 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
 
   const items =
     testType === 'words'
-      ? sentences.flatMap(s => parseWords(s))
-      : sentences;
+      ? phrases.flatMap(p => parseWordsWithLang(p.text, p.lang))
+      : phrases.map(p => ({ text: p.text, lang: p.lang }));
 
   const currentItem = items[currentIndex];
 
@@ -29,17 +29,17 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
       }
       stopSpeaking();
       setActiveSpeed(speed);
-      speakLoop(currentItem, lang, rate);
+      speakLoop(currentItem.text, currentItem.lang, rate);
     },
-    [currentItem, lang, activeSpeed]
+    [currentItem, activeSpeed]
   );
 
   const checkAnswer = () => {
     const isCorrect =
-      userAnswer.trim().toLowerCase() === currentItem.toLowerCase();
+      userAnswer.trim().toLowerCase() === currentItem.text.toLowerCase();
     const newResults = [
       ...results,
-      { item: currentItem, answer: userAnswer, correct: isCorrect },
+      { item: currentItem.text, answer: userAnswer, correct: isCorrect },
     ];
     setResults(newResults);
     setShowAnswer(true);
@@ -69,7 +69,7 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
   const skipItem = () => {
     const newResults = [
       ...results,
-      { item: currentItem, answer: '', correct: false },
+      { item: currentItem.text, answer: '', correct: false },
     ];
     setResults(newResults);
     stopSpeaking();
@@ -183,7 +183,7 @@ export default function ListeningTest({ sentences, lang, onClose, testType }) {
           <p>
             {results[results.length - 1]?.correct ? `✓ ${t('correct')}` : `✗ ${t('wrong')}`}
           </p>
-          <p className="correct-answer">{currentItem}</p>
+          <p className="correct-answer">{currentItem.text}</p>
         </div>
       )}
 

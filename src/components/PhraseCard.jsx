@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
-import { speakLoop, stopSpeaking } from '../utils/speech';
-import { parseWords } from '../utils/speech';
+import { speakLoop, stopSpeaking, parseWordsWithLang } from '../utils/speech';
 import WordCard from './WordCard';
 
 export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
   const { t } = useLanguage();
   const [activeSpeed, setActiveSpeed] = useState(null);
 
-  const words = parseWords(sentence);
+  const wordsWithLang = parseWordsWithLang(sentence, lang);
 
   const handleSpeak = (rate) => {
     const speed = rate < 1 ? 'slow' : 'normal';
@@ -58,8 +57,8 @@ export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
         </div>
       </div>
       <div className="words-container">
-        {words.map((word, index) => (
-          <WordCard key={`${word}-${index}`} word={word} lang={lang} onStopPhrase={handleStop} />
+        {wordsWithLang.map((w, index) => (
+          <WordCard key={`${w.text}-${index}`} word={w.text} lang={w.lang} onStopPhrase={handleStop} />
         ))}
       </div>
     </div>

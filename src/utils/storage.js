@@ -41,14 +41,38 @@ export function getLesson(lessonId) {
   return getLessons().find(l => l.id === lessonId) || null;
 }
 
-export function exportLessons() {
+export async function exportLessons() {
   const lessons = getLessons();
   const data = JSON.stringify(lessons, null, 2);
+  const fileName = `lessons_backup_${new Date().toISOString().slice(0, 10)}.json`;
+
+  try {
+    const { Capacitor } = await import('@capacitor/core');
+    if (Capacitor.isNativePlatform()) {
+      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+      const { Share } = await import('@capacitor/share');
+
+      const result = await Filesystem.writeFile({
+        path: fileName,
+        data: btoa(unescape(encodeURIComponent(data))),
+        directory: Directory.Cache,
+      });
+
+      await Share.share({
+        title: fileName,
+        url: result.uri,
+      });
+      return;
+    }
+  } catch {
+    // fallback to web download
+  }
+
   const blob = new Blob([data], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `lessons_backup_${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = fileName;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

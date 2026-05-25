@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { getLessons, deleteLesson, deleteSentenceFromLesson } from '../utils/storage';
+import { detectLanguage } from '../utils/speech';
 import PhraseCard from '../components/PhraseCard';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -60,7 +61,7 @@ export default function LessonsPage() {
             <PhraseCard
               key={`${sentence}-${index}`}
               sentence={sentence}
-              lang={selectedLesson.lang}
+              lang={selectedLesson.phraseLangs?.[index] || detectLanguage(sentence)}
               showDelete={true}
               onDelete={() => handleDeleteSentence(selectedLesson.id, index)}
             />
