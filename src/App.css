@@ -1116,15 +1116,13 @@ body {
   border-color: var(--primary);
 }
 
-.translate-source-actions {
+.clear-btn-translate {
   position: absolute;
   top: 8px;
   right: 8px;
-  display: flex;
-  gap: 4px;
 }
 
-.rtl .translate-source-actions {
+.rtl .clear-btn-translate {
   right: auto;
   left: 8px;
 }
@@ -1133,42 +1131,42 @@ body {
   width: 100%;
 }
 
-.translate-result {
-  background: var(--surface);
-  border: 2px solid var(--success);
-  border-radius: var(--radius);
-  padding: 14px;
-}
-
-.translate-result-header {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.translate-result-text {
-  font-size: 1.1rem;
-  line-height: 1.8;
-  color: var(--text);
-}
-
-.saved-section {
+.translated-sentences {
   margin-top: 16px;
 }
 
-.saved-toggle {
-  width: 100%;
-  text-align: center;
+.translated-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
-.saved-list {
+.translated-header .lesson-title-row,
+.translated-header .edit-name-row {
+  flex: 1;
+  min-width: 200px;
+}
+
+.translated-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.translated-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sentences-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 10px;
 }
 
-.saved-item {
+.sentence-pair {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -1176,32 +1174,54 @@ body {
   position: relative;
 }
 
-.saved-item-source,
-.saved-item-target {
+.sentence-source,
+.sentence-target {
   display: flex;
   align-items: flex-start;
   gap: 8px;
   margin-bottom: 4px;
 }
 
-.saved-item-source span {
+.sentence-num {
+  min-width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.sentence-num-placeholder {
+  min-width: 22px;
+  flex-shrink: 0;
+}
+
+.sentence-text {
   font-size: 0.95rem;
+  line-height: 1.6;
   color: var(--text);
+  flex: 1;
 }
 
-.saved-item-target span {
-  font-size: 0.95rem;
+.sentence-text-target {
   color: var(--text-secondary);
+  font-style: italic;
 }
 
-.btn-delete-saved {
+.btn-delete-sentence {
   position: absolute;
   top: 8px;
   right: 8px;
   border-color: var(--danger) !important;
+  color: var(--danger);
 }
 
-.rtl .btn-delete-saved {
+.rtl .btn-delete-sentence {
   right: auto;
   left: 8px;
 }

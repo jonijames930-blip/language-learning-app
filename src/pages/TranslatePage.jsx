@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { translateText } from '../utils/translate';
 import { speakLoop, stopSpeaking } from '../utils/speech';
+import { saveLesson } from '../utils/storage';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const langOptions = [
   { value: 'ar', label: 'العربية' },
@@ -18,48 +20,55 @@ const langOptions = [
   { value: 'ko', label: '한국어' },
 ];
 
-const SAVED_KEY = 'saved_translations';
-
-function getSaved() {
-  try {
-    return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function saveTrans(item) {
-  const list = getSaved();
-  list.unshift({ ...item, id: Date.now().toString() });
-  localStorage.setItem(SAVED_KEY, JSON.stringify(list));
-  return list;
-}
-
-function deleteTrans(id) {
-  const list = getSaved().filter(t => t.id !== id);
-  localStorage.setItem(SAVED_KEY, JSON.stringify(list));
-  return list;
+function splitSentences(text) {
+  return text
+    .split(/(?<=[.!?؟。！？])\s+|\n+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
 }
 
 export default function TranslatePage() {
   const { t } = useLanguage();
   const [sourceText, setSourceText] = useState('');
-  const [translatedText, setTranslatedText] = useState('');
   const [sourceLang, setSourceLang] = useState('fr');
   const [targetLang, setTargetLang] = useState('ar');
   const [loading, setLoading] = useState(false);
+  const [sentences, setSentences] = useState([]);
   const [activeLoop, setActiveLoop] = useState(null);
-  const [saved, setSaved] = useState(() => getSaved());
-  const [showSaved, setShowSaved] = useState(false);
+  const [lessonName, setLessonName] = useState('');
+  const [editingName, setEditingName] = useState(false);
+  const [notification, setNotification] = useState('');
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const handleTranslate = async () => {
     if (!sourceText.trim()) return;
     setLoading(true);
-    try {
-      const result = await translateText(sourceText.trim(), sourceLang, targetLang);
-      setTranslatedText(result.translation);
-    } catch {
-      setTranslatedText('');
+    const parts = splitSentences(sourceText.trim());
+    const results = [];
+    for (const part of parts) {
+      try {
+        const result = await translateText(part, sourceLang, targetLang);
+        results.push({
+          id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+          source: part,
+          translation: result.translation,
+          sourceLang,
+          targetLang,
+        });
+      } catch {
+        results.push({
+          id: Date.now().toString() + Math.random().toString(36).slice(2, 6),
+          source: part,
+          translation: '',
+          sourceLang,
+          targetLang,
+        });
+      }
+    }
+    setSentences(results);
+    if (!lessonName) {
+      const preview = sourceText.trim().slice(0, 30);
+      setLessonName(preview + (sourceText.trim().length > 30 ? '...' : ''));
     }
     setLoading(false);
   };
@@ -75,39 +84,56 @@ export default function TranslatePage() {
     speakLoop(text, lang, 1);
   };
 
-  const handleSave = () => {
-    if (!sourceText.trim() || !translatedText) return;
-    const updated = saveTrans({
-      source: sourceText.trim(),
-      translation: translatedText,
-      sourceLang,
-      targetLang,
-    });
-    setSaved(updated);
-  };
-
-  const handleDelete = (id) => {
-    const updated = deleteTrans(id);
-    setSaved(updated);
-  };
-
   const handleSwapLangs = () => {
     setSourceLang(targetLang);
     setTargetLang(sourceLang);
-    setSourceText(translatedText);
-    setTranslatedText('');
+    setSentences([]);
   };
 
-  const handleSavedSpeak = (text, lang, id, type) => {
-    const key = `saved-${id}-${type}`;
-    if (activeLoop === key) {
-      stopSpeaking();
-      setActiveLoop(null);
-      return;
+  const handleDeleteSentence = (id) => {
+    setConfirmAction({ type: 'single', id });
+  };
+
+  const handleDeleteAll = () => {
+    setConfirmAction({ type: 'all' });
+  };
+
+  const confirmDelete = () => {
+    if (confirmAction.type === 'all') {
+      setSentences([]);
+      setSourceText('');
+      setLessonName('');
+    } else if (confirmAction.type === 'single') {
+      setSentences(prev => prev.filter(s => s.id !== confirmAction.id));
     }
-    stopSpeaking();
-    setActiveLoop(key);
-    speakLoop(text, lang, 1);
+    setConfirmAction(null);
+  };
+
+  const handleExportToStudy = () => {
+    if (sentences.length === 0) return;
+    const name = lessonName.trim() || `${t('translateTab')} ${new Date().toLocaleDateString()}`;
+    const allSentences = [];
+    const phraseLangs = [];
+
+    for (const s of sentences) {
+      allSentences.push(s.source);
+      phraseLangs.push(s.sourceLang);
+      if (s.translation) {
+        allSentences.push(s.translation);
+        phraseLangs.push(s.targetLang);
+      }
+    }
+
+    saveLesson({
+      name,
+      sentences: allSentences,
+      phraseLangs,
+      lang: sourceLang,
+      langOverride: 'auto',
+    });
+
+    setNotification(t('savedSuccessfully'));
+    setTimeout(() => setNotification(''), 3000);
   };
 
   return (
@@ -130,20 +156,17 @@ export default function TranslatePage() {
             value={sourceText}
             onChange={(e) => setSourceText(e.target.value)}
             placeholder={t('enterText')}
-            rows={4}
+            rows={5}
             className="translate-textarea"
           />
           {sourceText && (
-            <div className="translate-source-actions">
-              <button
-                className={`btn-icon ${activeLoop === 'source' ? 'active-loop' : ''}`}
-                onClick={() => handleSpeak(sourceText, sourceLang, 'source')}
-                title={activeLoop === 'source' ? t('stop') : t('normalSpeed')}
-              >
-                {activeLoop === 'source' ? '⏹️' : '🔊'}
-              </button>
-              <button className="btn-icon" onClick={() => { setSourceText(''); setTranslatedText(''); }} title={t('clearText')}>✕</button>
-            </div>
+            <button
+              className="btn-icon clear-btn-translate"
+              onClick={() => { setSourceText(''); setSentences([]); setLessonName(''); }}
+              title={t('clearText')}
+            >
+              ✕
+            </button>
           )}
         </div>
 
@@ -154,60 +177,93 @@ export default function TranslatePage() {
         >
           {loading ? '⏳' : '🌐'} {t('translate')}
         </button>
-
-        {translatedText && (
-          <div className="translate-result">
-            <div className="translate-result-header">
-              <button
-                className={`btn-icon ${activeLoop === 'target' ? 'active-loop' : ''}`}
-                onClick={() => handleSpeak(translatedText, targetLang, 'target')}
-                title={activeLoop === 'target' ? t('stop') : t('normalSpeed')}
-              >
-                {activeLoop === 'target' ? '⏹️' : '🔊'}
-              </button>
-              <button className="btn-icon" onClick={handleSave} title={t('save')}>💾</button>
-            </div>
-            <p className="translate-result-text">{translatedText}</p>
-          </div>
-        )}
       </div>
 
-      <div className="saved-section">
-        <button
-          className="btn btn-secondary saved-toggle"
-          onClick={() => setShowSaved(!showSaved)}
-        >
-          📋 {t('savedTranslations')} ({saved.length}) {showSaved ? '▲' : '▼'}
-        </button>
+      {notification && <div className="notification success">{notification}</div>}
 
-        {showSaved && saved.length > 0 && (
-          <div className="saved-list">
-            {saved.map(item => (
-              <div key={item.id} className="saved-item">
-                <div className="saved-item-source">
+      {sentences.length > 0 && (
+        <div className="translated-sentences">
+          <div className="translated-header">
+            {editingName ? (
+              <div className="edit-name-row">
+                <input
+                  type="text"
+                  value={lessonName}
+                  onChange={(e) => setLessonName(e.target.value)}
+                  className="input-edit-name"
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === 'Enter') setEditingName(false); }}
+                />
+                <button className="btn btn-primary btn-small" onClick={() => setEditingName(false)}>{t('save')}</button>
+              </div>
+            ) : (
+              <div className="lesson-title-row">
+                <h3>{lessonName || t('translateTab')}</h3>
+                <button
+                  className="btn-icon btn-icon-sm"
+                  onClick={() => setEditingName(true)}
+                  title={t('editName')}
+                >
+                  ✏️
+                </button>
+              </div>
+            )}
+
+            <div className="translated-actions">
+              <button className="btn btn-success btn-small" onClick={handleExportToStudy}>
+                📤 {t('exportToStudy')}
+              </button>
+              <button className="btn btn-danger btn-small" onClick={handleDeleteAll}>
+                🗑️ {t('deleteAll')}
+              </button>
+            </div>
+          </div>
+
+          <div className="sentences-list">
+            {sentences.map((s, idx) => (
+              <div key={s.id} className="sentence-pair">
+                <div className="sentence-source">
+                  <span className="sentence-num">{idx + 1}</span>
                   <button
-                    className={`btn-icon btn-icon-sm ${activeLoop === `saved-${item.id}-source` ? 'active-loop' : ''}`}
-                    onClick={() => handleSavedSpeak(item.source, item.sourceLang, item.id, 'source')}
+                    className={`btn-icon btn-icon-sm ${activeLoop === `src-${s.id}` ? 'active-loop' : ''}`}
+                    onClick={() => handleSpeak(s.source, s.sourceLang, `src-${s.id}`)}
                   >
-                    {activeLoop === `saved-${item.id}-source` ? '⏹️' : '🔊'}
+                    {activeLoop === `src-${s.id}` ? '⏹️' : '🔊'}
                   </button>
-                  <span>{item.source}</span>
+                  <span className="sentence-text">{s.source}</span>
                 </div>
-                <div className="saved-item-target">
-                  <button
-                    className={`btn-icon btn-icon-sm ${activeLoop === `saved-${item.id}-target` ? 'active-loop' : ''}`}
-                    onClick={() => handleSavedSpeak(item.translation, item.targetLang, item.id, 'target')}
-                  >
-                    {activeLoop === `saved-${item.id}-target` ? '⏹️' : '🔊'}
-                  </button>
-                  <span>{item.translation}</span>
-                </div>
-                <button className="btn-icon btn-icon-sm btn-delete-saved" onClick={() => handleDelete(item.id)}>🗑️</button>
+                {s.translation && (
+                  <div className="sentence-target">
+                    <span className="sentence-num-placeholder" />
+                    <button
+                      className={`btn-icon btn-icon-sm ${activeLoop === `tgt-${s.id}` ? 'active-loop' : ''}`}
+                      onClick={() => handleSpeak(s.translation, s.targetLang, `tgt-${s.id}`)}
+                    >
+                      {activeLoop === `tgt-${s.id}` ? '⏹️' : '🔊'}
+                    </button>
+                    <span className="sentence-text sentence-text-target">{s.translation}</span>
+                  </div>
+                )}
+                <button
+                  className="btn-icon btn-icon-sm btn-delete-sentence"
+                  onClick={() => handleDeleteSentence(s.id)}
+                  title={t('deleteSentence')}
+                >
+                  ✕
+                </button>
               </div>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {confirmAction && (
+        <ConfirmDialog
+          message={confirmAction.type === 'all' ? t('confirmDeleteAll') : t('confirmDeleteSentence')}
+          onConfirm={confirmDelete}
+          onCancel={() => setConfirmAction(null)}
+        />
+      )}
     </div>
   );
 }

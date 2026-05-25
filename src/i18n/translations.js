@@ -80,6 +80,9 @@ const translations = {
     updateSuccess: 'تم التحديث بنجاح',
     translateTab: 'الترجمة',
     savedTranslations: 'الترجمات المحفوظة',
+    exportToStudy: 'تصدير للدراسة',
+    deleteAll: 'حذف الكل',
+    confirmDeleteAll: 'هل أنت متأكد من حذف جميع العبارات؟',
   },
   fr: {
     appTitle: 'Apprendre les langues',
@@ -162,6 +165,9 @@ const translations = {
     updateSuccess: 'Mis à jour avec succès',
     translateTab: 'Traduction',
     savedTranslations: 'Traductions enregistrées',
+    exportToStudy: 'Exporter vers étude',
+    deleteAll: 'Tout supprimer',
+    confirmDeleteAll: 'Êtes-vous sûr de vouloir supprimer toutes les phrases?',
   },
   en: {
     appTitle: 'Language Learning',
@@ -244,6 +250,9 @@ const translations = {
     updateSuccess: 'Updated successfully',
     translateTab: 'Translate',
     savedTranslations: 'Saved Translations',
+    exportToStudy: 'Export to Study',
+    deleteAll: 'Delete All',
+    confirmDeleteAll: 'Are you sure you want to delete all sentences?',
   },
 };
 
