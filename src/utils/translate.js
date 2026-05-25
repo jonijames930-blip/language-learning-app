@@ -29,9 +29,15 @@ export async function translateText(text, fromLang, toLang) {
   }
 }
 
-export async function getWordDetails(word, sourceLang) {
-  const targetLangs = ['ar', 'fr', 'en'].filter(l => l !== sourceLang);
+function getTargetLangs(sourceLang) {
+  if (sourceLang === 'ar') return ['en', 'fr'];
+  if (sourceLang === 'en') return ['fr', 'ar'];
+  if (sourceLang === 'fr') return ['en', 'ar'];
+  return ['ar', 'fr', 'en'].filter(l => l !== sourceLang);
+}
 
+export async function getWordDetails(word, sourceLang) {
+  const targetLangs = getTargetLangs(sourceLang);
   const results = {};
 
   const translations = await Promise.all(
@@ -48,17 +54,76 @@ export async function getWordDetails(word, sourceLang) {
     };
   }
 
-  if (sourceLang !== 'ar' && !results.ar) {
-    results.ar = { translation: word, meanings: [word] };
-  }
-  if (sourceLang !== 'fr' && !results.fr) {
-    results.fr = { translation: word, meanings: [word] };
-  }
-  if (sourceLang !== 'en' && !results.en) {
-    results.en = { translation: word, meanings: [word] };
-  }
-
   return results;
+}
+
+export async function getCommonPhrases(word, wordLang) {
+  try {
+    const response = await fetch(
+      `${GOOGLE_TRANSLATE_API}?client=gtx&sl=${wordLang}&tl=ar&dt=t&dt=ex&dt=ss&q=${encodeURIComponent(word)}`
+    );
+    const data = await response.json();
+
+    const phrases = [];
+
+    if (data[13]) {
+      for (const group of data[13]) {
+        if (group[2]) {
+          for (const example of group[2]) {
+            if (example[0] && phrases.length < 6) {
+              const original = example[0].replace(/<\/?b>/g, '');
+              phrases.push({ text: original, lang: wordLang });
+            }
+          }
+        }
+      }
+    }
+
+    if (data[11]) {
+      for (const synGroup of data[11]) {
+        if (synGroup[1]) {
+          for (const synSet of synGroup[1]) {
+            if (synSet[3] && phrases.length < 6) {
+              const example = synSet[3].replace(/<\/?b>/g, '');
+              phrases.push({ text: example, lang: wordLang });
+            }
+          }
+        }
+      }
+    }
+
+    if (phrases.length === 0) {
+      const templates = wordLang === 'fr'
+        ? [
+            `J'utilise le mot "${word}" souvent`,
+            `Le "${word}" est très important`,
+            `Je cherche "${word}" partout`,
+          ]
+        : [
+            `I use the word "${word}" often`,
+            `The "${word}" is very important`,
+            `I am looking for "${word}"`,
+          ];
+      for (const tmpl of templates) {
+        phrases.push({ text: tmpl, lang: wordLang });
+      }
+    }
+
+    const withTranslation = await Promise.all(
+      phrases.map(async (p) => {
+        try {
+          const tr = await translateText(p.text, p.lang, 'ar');
+          return { ...p, arabicTranslation: tr.translation };
+        } catch {
+          return { ...p, arabicTranslation: '' };
+        }
+      })
+    );
+
+    return withTranslation;
+  } catch {
+    return [];
+  }
 }
 
 export function getGoogleClipArtUrl(word) {

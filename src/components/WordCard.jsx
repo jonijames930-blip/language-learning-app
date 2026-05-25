@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { speakLoop, stopSpeaking } from '../utils/speech';
-import { getWordDetails, getGoogleClipArtUrl } from '../utils/translate';
+import { getWordDetails, getCommonPhrases, getGoogleClipArtUrl } from '../utils/translate';
 
 export default function WordCard({ word, lang, onStopPhrase }) {
   const { t } = useLanguage();
@@ -9,6 +9,10 @@ export default function WordCard({ word, lang, onStopPhrase }) {
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeSpeed, setActiveSpeed] = useState(null);
+  const [showPhrases, setShowPhrases] = useState(false);
+  const [phrases, setPhrases] = useState(null);
+  const [phrasesLoading, setPhrasesLoading] = useState(false);
+  const [phraseLoopId, setPhraseLoopId] = useState(null);
 
   const handleTranslate = async () => {
     if (showDetails) {
@@ -39,7 +43,43 @@ export default function WordCard({ word, lang, onStopPhrase }) {
     speakLoop(word, lang, rate);
   };
 
+  const handlePhrases = async () => {
+    if (showPhrases) {
+      setShowPhrases(false);
+      stopSpeaking();
+      setPhraseLoopId(null);
+      return;
+    }
+    if (lang === 'ar') return;
+    setPhrasesLoading(true);
+    try {
+      const result = await getCommonPhrases(word, lang);
+      setPhrases(result);
+      setShowPhrases(true);
+    } catch {
+      setPhrases(null);
+    }
+    setPhrasesLoading(false);
+  };
+
+  const handlePhraseSpeak = (phraseText, phraseLang, index) => {
+    if (phraseLoopId === index) {
+      stopSpeaking();
+      setPhraseLoopId(null);
+      return;
+    }
+    stopSpeaking();
+    setActiveSpeed(null);
+    setPhraseLoopId(index);
+    speakLoop(phraseText, phraseLang, 1);
+  };
+
   const langLabels = { ar: t('inArabic'), fr: t('inFrench'), en: t('inEnglish') };
+
+  const targetLangs = lang === 'ar' ? ['en', 'fr']
+    : lang === 'en' ? ['fr', 'ar']
+    : lang === 'fr' ? ['en', 'ar']
+    : ['ar', 'fr', 'en'].filter(l => l !== lang);
 
   return (
     <span className="word-card">
@@ -74,11 +114,21 @@ export default function WordCard({ word, lang, onStopPhrase }) {
         >
           {loading ? '⏳' : '🌐'}
         </button>
+        {lang !== 'ar' && (
+          <button
+            className="btn-icon btn-phrases"
+            onClick={handlePhrases}
+            disabled={phrasesLoading}
+            title={t('commonPhrases')}
+          >
+            {phrasesLoading ? '⏳' : '💬'}
+          </button>
+        )}
       </span>
 
       {showDetails && details && (
         <div className="word-details">
-          {['ar', 'fr', 'en'].map(targetLang => (
+          {targetLangs.map(targetLang => (
             details[targetLang] && (
               <div key={targetLang} className="translation-block">
                 <h4>{langLabels[targetLang]}</h4>
@@ -97,6 +147,32 @@ export default function WordCard({ word, lang, onStopPhrase }) {
             )
           ))}
           <button className="btn-close-details" onClick={() => setShowDetails(false)}>
+            {t('close')}
+          </button>
+        </div>
+      )}
+
+      {showPhrases && phrases && phrases.length > 0 && (
+        <div className="word-details phrases-list">
+          <h4>💬 {t('commonPhrases')}</h4>
+          {phrases.map((p, i) => (
+            <div key={i} className="phrase-example">
+              <div className="phrase-example-row">
+                <button
+                  className={`btn-icon ${phraseLoopId === i ? 'active-loop' : ''}`}
+                  onClick={() => handlePhraseSpeak(p.text, p.lang, i)}
+                  title={phraseLoopId === i ? t('stop') || 'Stop' : t('normalSpeed')}
+                >
+                  {phraseLoopId === i ? '⏹️' : '🔊'}
+                </button>
+                <span className="phrase-example-text">{p.text}</span>
+              </div>
+              {p.arabicTranslation && (
+                <p className="phrase-example-arabic">{p.arabicTranslation}</p>
+              )}
+            </div>
+          ))}
+          <button className="btn-close-details" onClick={() => { setShowPhrases(false); stopSpeaking(); setPhraseLoopId(null); }}>
             {t('close')}
           </button>
         </div>

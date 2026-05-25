@@ -509,6 +509,57 @@ body {
   background: #cbd5e1;
 }
 
+/* ========== Common Phrases ========== */
+.btn-phrases {
+  border-color: var(--accent) !important;
+  color: var(--accent);
+}
+
+.btn-phrases:hover {
+  background: #f5f3ff !important;
+}
+
+.phrases-list h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.phrase-example {
+  margin-bottom: 10px;
+  padding: 8px;
+  background: #f8fafc;
+  border-radius: var(--radius-xs);
+  border-left: 3px solid var(--accent);
+}
+
+.rtl .phrase-example {
+  border-left: none;
+  border-right: 3px solid var(--accent);
+}
+
+.phrase-example-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.phrase-example-text {
+  font-size: 0.9rem;
+  color: var(--text);
+  flex: 1;
+}
+
+.phrase-example-arabic {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+  padding-inline-start: 40px;
+  direction: rtl;
+  text-align: right;
+}
+
 /* ========== Lessons Page ========== */
 .lessons-page h2,
 .study-page h2,

@@ -75,6 +75,7 @@ const translations = {
     importSuccess: 'تم استيراد الدروس بنجاح',
     importError: 'خطأ في استيراد الملف',
     backupRestore: 'نسخ احتياطي واستعادة',
+    commonPhrases: 'عبارات شائعة',
   },
   fr: {
     appTitle: 'Apprendre les langues',
@@ -152,6 +153,7 @@ const translations = {
     importSuccess: 'Leçons importées avec succès',
     importError: "Erreur lors de l'importation",
     backupRestore: 'Sauvegarde et restauration',
+    commonPhrases: 'Phrases courantes',
   },
   en: {
     appTitle: 'Language Learning',
@@ -229,6 +231,7 @@ const translations = {
     importSuccess: 'Lessons imported successfully',
     importError: 'Error importing file',
     backupRestore: 'Backup & Restore',
+    commonPhrases: 'Common Phrases',
   },
 };
 
