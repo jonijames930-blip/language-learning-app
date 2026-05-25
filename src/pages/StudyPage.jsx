@@ -1,15 +1,20 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { getLessons, updateLesson } from '../utils/storage';
-import { detectLanguage, parseSentencesWithLang } from '../utils/speech';
+import { detectLanguage } from '../utils/speech';
 import PhraseCard from '../components/PhraseCard';
 import ListeningTest from '../components/ListeningTest';
 
-function buildPhrases(lesson) {
-  return lesson.sentences.map((s, i) => ({
-    text: s,
-    lang: lesson.phraseLangs?.[i] || detectLanguage(s),
-  }));
+function buildPhrases(lesson, langOverride) {
+  return lesson.sentences.map((s, i) => {
+    if (langOverride && langOverride !== 'auto') {
+      return { text: s, lang: langOverride };
+    }
+    return {
+      text: s,
+      lang: lesson.phraseLangs?.[i] || detectLanguage(s),
+    };
+  });
 }
 
 const langOptions = [
@@ -36,6 +41,12 @@ export default function StudyPage() {
   const [editingName, setEditingName] = useState(false);
   const [editName, setEditName] = useState('');
   const [notification, setNotification] = useState('');
+  const [langOverride, setLangOverride] = useState('auto');
+
+  const handleSelectLesson = (lesson) => {
+    setSelectedLesson(lesson);
+    setLangOverride(lesson.langOverride || 'auto');
+  };
 
   const handleSaveName = () => {
     if (!editName.trim() || !selectedLesson) return;
@@ -49,23 +60,24 @@ export default function StudyPage() {
 
   const handleChangeLang = (newLang) => {
     if (!selectedLesson) return;
-    const text = selectedLesson.sentences.join('. ');
-    const overrideLang = newLang === 'auto' ? null : newLang;
-    const newPhrases = parseSentencesWithLang(text, overrideLang);
-    const phraseLangs = selectedLesson.sentences.map((s, i) => {
-      const match = newPhrases.find(p => p.text === s);
-      return match ? match.lang : (overrideLang || detectLanguage(s));
-    });
-    const updated = updateLesson(selectedLesson.id, { phraseLangs, lang: phraseLangs[0] || 'en' });
-    setLessons(updated);
-    const refreshed = updated.find(l => l.id === selectedLesson.id);
-    setSelectedLesson(refreshed);
+    setLangOverride(newLang);
+    if (newLang === 'auto') {
+      const phraseLangs = selectedLesson.sentences.map(s => detectLanguage(s));
+      const updated = updateLesson(selectedLesson.id, { phraseLangs, lang: phraseLangs[0] || 'en', langOverride: 'auto' });
+      setLessons(updated);
+      setSelectedLesson(updated.find(l => l.id === selectedLesson.id));
+    } else {
+      const phraseLangs = selectedLesson.sentences.map(() => newLang);
+      const updated = updateLesson(selectedLesson.id, { phraseLangs, lang: newLang, langOverride: newLang });
+      setLessons(updated);
+      setSelectedLesson(updated.find(l => l.id === selectedLesson.id));
+    }
     setNotification(t('updateSuccess'));
     setTimeout(() => setNotification(''), 3000);
   };
 
   if (testMode && selectedLesson) {
-    const phrases = buildPhrases(selectedLesson);
+    const phrases = buildPhrases(selectedLesson, langOverride);
     const nonArabic = phrases.filter(p => p.lang !== 'ar');
 
     if (nonArabic.length === 0) {
@@ -96,7 +108,7 @@ export default function StudyPage() {
   }
 
   if (selectedLesson) {
-    const phrases = buildPhrases(selectedLesson);
+    const phrases = buildPhrases(selectedLesson, langOverride);
     const hasNonArabic = phrases.some(p => p.lang !== 'ar');
 
     return (
@@ -135,7 +147,7 @@ export default function StudyPage() {
         <div className="study-lang-selector">
           <label>{t('textLanguage')}:</label>
           <select
-            value={selectedLesson.lang || 'auto'}
+            value={langOverride}
             onChange={(e) => handleChangeLang(e.target.value)}
           >
             {langOptions.map(opt => (
@@ -166,7 +178,7 @@ export default function StudyPage() {
         <div className="phrases-section">
           {phrases.map((phrase, index) => (
             <PhraseCard
-              key={`${phrase.text}-${index}`}
+              key={`${phrase.text}-${index}-${phrase.lang}`}
               sentence={phrase.text}
               lang={phrase.lang}
               showDelete={false}
@@ -192,7 +204,7 @@ export default function StudyPage() {
             <div
               key={lesson.id}
               className="lesson-card clickable"
-              onClick={() => setSelectedLesson(lesson)}
+              onClick={() => handleSelectLesson(lesson)}
             >
               <div className="lesson-info">
                 <h3>{lesson.name}</h3>

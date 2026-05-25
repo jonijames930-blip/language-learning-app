@@ -1065,6 +1065,147 @@ body {
   flex-direction: row-reverse;
 }
 
+/* ========== Translate Page ========== */
+.translate-page h2 {
+  font-size: 1.3rem;
+  margin-bottom: 16px;
+}
+
+.translate-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.translate-lang-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.translate-lang-row select {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.translate-input-area {
+  position: relative;
+}
+
+.translate-textarea {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  line-height: 1.6;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.translate-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.translate-source-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+}
+
+.rtl .translate-source-actions {
+  right: auto;
+  left: 8px;
+}
+
+.translate-btn {
+  width: 100%;
+}
+
+.translate-result {
+  background: var(--surface);
+  border: 2px solid var(--success);
+  border-radius: var(--radius);
+  padding: 14px;
+}
+
+.translate-result-header {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.translate-result-text {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: var(--text);
+}
+
+.saved-section {
+  margin-top: 16px;
+}
+
+.saved-toggle {
+  width: 100%;
+  text-align: center;
+}
+
+.saved-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.saved-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  position: relative;
+}
+
+.saved-item-source,
+.saved-item-target {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.saved-item-source span {
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.saved-item-target span {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.btn-delete-saved {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border-color: var(--danger) !important;
+}
+
+.rtl .btn-delete-saved {
+  right: auto;
+  left: 8px;
+}
+
 /* ========== Scrollbar ========== */
 ::-webkit-scrollbar {
   width: 6px;

@@ -3,6 +3,7 @@ import { useLanguage } from './context/useLanguage';
 import InputPage from './pages/InputPage';
 import LessonsPage from './pages/LessonsPage';
 import StudyPage from './pages/StudyPage';
+import TranslatePage from './pages/TranslatePage';
 import SettingsPage from './pages/SettingsPage';
 import './App.css';
 
@@ -14,6 +15,7 @@ function App() {
     { id: 'input', label: t('inputTab'), icon: '✏️' },
     { id: 'lessons', label: t('lessonsTab'), icon: '📚' },
     { id: 'study', label: t('studyTab'), icon: '🎧' },
+    { id: 'translate', label: t('translateTab'), icon: '🌐' },
     { id: 'settings', label: t('settingsTab'), icon: '⚙️' },
   ];
 
@@ -22,6 +24,7 @@ function App() {
       case 'input': return <InputPage />;
       case 'lessons': return <LessonsPage />;
       case 'study': return <StudyPage />;
+      case 'translate': return <TranslatePage />;
       case 'settings': return <SettingsPage />;
       default: return <InputPage />;
     }

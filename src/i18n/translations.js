@@ -78,6 +78,8 @@ const translations = {
     commonPhrases: 'عبارات شائعة',
     editName: 'تعديل الاسم',
     updateSuccess: 'تم التحديث بنجاح',
+    translateTab: 'الترجمة',
+    savedTranslations: 'الترجمات المحفوظة',
   },
   fr: {
     appTitle: 'Apprendre les langues',
@@ -158,6 +160,8 @@ const translations = {
     commonPhrases: 'Phrases courantes',
     editName: 'Modifier le nom',
     updateSuccess: 'Mis à jour avec succès',
+    translateTab: 'Traduction',
+    savedTranslations: 'Traductions enregistrées',
   },
   en: {
     appTitle: 'Language Learning',
@@ -238,6 +242,8 @@ const translations = {
     commonPhrases: 'Common Phrases',
     editName: 'Edit Name',
     updateSuccess: 'Updated successfully',
+    translateTab: 'Translate',
+    savedTranslations: 'Saved Translations',
   },
 };
 
