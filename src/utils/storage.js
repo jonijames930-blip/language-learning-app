@@ -41,6 +41,16 @@ export function getLesson(lessonId) {
   return getLessons().find(l => l.id === lessonId) || null;
 }
 
+export function updateLesson(lessonId, updates) {
+  const lessons = getLessons();
+  const lesson = lessons.find(l => l.id === lessonId);
+  if (lesson) {
+    Object.assign(lesson, updates);
+    localStorage.setItem(LESSONS_KEY, JSON.stringify(lessons));
+  }
+  return lessons;
+}
+
 export async function exportLessons() {
   const lessons = getLessons();
   const data = JSON.stringify(lessons, null, 2);

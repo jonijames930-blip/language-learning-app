@@ -76,6 +76,8 @@ const translations = {
     importError: 'خطأ في استيراد الملف',
     backupRestore: 'نسخ احتياطي واستعادة',
     commonPhrases: 'عبارات شائعة',
+    editName: 'تعديل الاسم',
+    updateSuccess: 'تم التحديث بنجاح',
   },
   fr: {
     appTitle: 'Apprendre les langues',
@@ -154,6 +156,8 @@ const translations = {
     importError: "Erreur lors de l'importation",
     backupRestore: 'Sauvegarde et restauration',
     commonPhrases: 'Phrases courantes',
+    editName: 'Modifier le nom',
+    updateSuccess: 'Mis à jour avec succès',
   },
   en: {
     appTitle: 'Language Learning',
@@ -232,6 +236,8 @@ const translations = {
     importError: 'Error importing file',
     backupRestore: 'Backup & Restore',
     commonPhrases: 'Common Phrases',
+    editName: 'Edit Name',
+    updateSuccess: 'Updated successfully',
   },
 };
 

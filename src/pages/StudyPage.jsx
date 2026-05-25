@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
-import { getLessons } from '../utils/storage';
-import { detectLanguage } from '../utils/speech';
+import { getLessons, updateLesson } from '../utils/storage';
+import { detectLanguage, parseSentencesWithLang } from '../utils/speech';
 import PhraseCard from '../components/PhraseCard';
 import ListeningTest from '../components/ListeningTest';
 
@@ -12,11 +12,57 @@ function buildPhrases(lesson) {
   }));
 }
 
+const langOptions = [
+  { value: 'auto', label: 'Auto' },
+  { value: 'ar', label: 'العربية' },
+  { value: 'fr', label: 'Français' },
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'it', label: 'Italiano' },
+  { value: 'tr', label: 'Türkçe' },
+  { value: 'pt', label: 'Português' },
+  { value: 'ru', label: 'Русский' },
+  { value: 'zh', label: '中文' },
+  { value: 'ja', label: '日本語' },
+  { value: 'ko', label: '한국어' },
+];
+
 export default function StudyPage() {
   const { t } = useLanguage();
-  const [lessons] = useState(() => getLessons());
+  const [lessons, setLessons] = useState(() => getLessons());
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [testMode, setTestMode] = useState(null);
+  const [editingName, setEditingName] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [notification, setNotification] = useState('');
+
+  const handleSaveName = () => {
+    if (!editName.trim() || !selectedLesson) return;
+    const updated = updateLesson(selectedLesson.id, { name: editName.trim() });
+    setLessons(updated);
+    setSelectedLesson({ ...selectedLesson, name: editName.trim() });
+    setEditingName(false);
+    setNotification(t('updateSuccess'));
+    setTimeout(() => setNotification(''), 3000);
+  };
+
+  const handleChangeLang = (newLang) => {
+    if (!selectedLesson) return;
+    const text = selectedLesson.sentences.join('. ');
+    const overrideLang = newLang === 'auto' ? null : newLang;
+    const newPhrases = parseSentencesWithLang(text, overrideLang);
+    const phraseLangs = selectedLesson.sentences.map((s, i) => {
+      const match = newPhrases.find(p => p.text === s);
+      return match ? match.lang : (overrideLang || detectLanguage(s));
+    });
+    const updated = updateLesson(selectedLesson.id, { phraseLangs, lang: phraseLangs[0] || 'en' });
+    setLessons(updated);
+    const refreshed = updated.find(l => l.id === selectedLesson.id);
+    setSelectedLesson(refreshed);
+    setNotification(t('updateSuccess'));
+    setTimeout(() => setNotification(''), 3000);
+  };
 
   if (testMode && selectedLesson) {
     const phrases = buildPhrases(selectedLesson);
@@ -56,11 +102,49 @@ export default function StudyPage() {
     return (
       <div className="page study-page">
         <div className="study-header">
-          <button className="btn btn-secondary" onClick={() => setSelectedLesson(null)}>
+          <button className="btn btn-secondary" onClick={() => { setSelectedLesson(null); setEditingName(false); }}>
             ← {t('back')}
           </button>
-          <h2>{selectedLesson.name}</h2>
+          {editingName ? (
+            <div className="edit-name-row">
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="input-edit-name"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === 'Enter') handleSaveName(); }}
+              />
+              <button className="btn btn-primary btn-small" onClick={handleSaveName}>{t('save')}</button>
+              <button className="btn btn-secondary btn-small" onClick={() => setEditingName(false)}>{t('cancel')}</button>
+            </div>
+          ) : (
+            <div className="lesson-title-row">
+              <h2>{selectedLesson.name}</h2>
+              <button
+                className="btn-icon btn-icon-sm"
+                onClick={() => { setEditName(selectedLesson.name); setEditingName(true); }}
+                title={t('editName')}
+              >
+                ✏️
+              </button>
+            </div>
+          )}
         </div>
+
+        <div className="study-lang-selector">
+          <label>{t('textLanguage')}:</label>
+          <select
+            value={selectedLesson.lang || 'auto'}
+            onChange={(e) => handleChangeLang(e.target.value)}
+          >
+            {langOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+
+        {notification && <div className="notification success">{notification}</div>}
 
         {hasNonArabic && (
           <div className="test-buttons">
