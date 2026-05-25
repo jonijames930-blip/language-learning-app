@@ -83,6 +83,9 @@ const translations = {
     exportToStudy: 'تصدير للدراسة',
     deleteAll: 'حذف الكل',
     confirmDeleteAll: 'هل أنت متأكد من حذف جميع العبارات؟',
+    draw: 'رسم',
+    pen: 'قلم',
+    eraser: 'ممحاة',
   },
   fr: {
     appTitle: 'Apprendre les langues',
@@ -168,6 +171,9 @@ const translations = {
     exportToStudy: 'Exporter vers étude',
     deleteAll: 'Tout supprimer',
     confirmDeleteAll: 'Êtes-vous sûr de vouloir supprimer toutes les phrases?',
+    draw: 'Dessiner',
+    pen: 'Stylo',
+    eraser: 'Gomme',
   },
   en: {
     appTitle: 'Language Learning',
@@ -253,6 +259,9 @@ const translations = {
     exportToStudy: 'Export to Study',
     deleteAll: 'Delete All',
     confirmDeleteAll: 'Are you sure you want to delete all sentences?',
+    draw: 'Draw',
+    pen: 'Pen',
+    eraser: 'Eraser',
   },
 };
 

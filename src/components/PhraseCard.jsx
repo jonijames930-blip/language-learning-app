@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { speakLoop, stopSpeaking, parseWordsWithLang } from '../utils/speech';
 import WordCard from './WordCard';
+import DrawingCanvas from './DrawingCanvas';
 
 export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
   const { t } = useLanguage();
   const [activeSpeed, setActiveSpeed] = useState(null);
+  const [showDrawing, setShowDrawing] = useState(false);
 
   const wordsWithLang = parseWordsWithLang(sentence, lang);
 
@@ -31,6 +33,13 @@ export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
       <div className="phrase-header">
         <p className="phrase-text">{sentence}</p>
         <div className="phrase-actions">
+          <button
+            className="btn-icon btn-draw"
+            onClick={() => setShowDrawing(true)}
+            title={t('draw') || 'Draw'}
+          >
+            🖊️
+          </button>
           <button
             className={`btn-icon btn-speak-slow ${activeSpeed === 'slow' ? 'active-loop' : ''}`}
             onClick={() => handleSpeak(0.6)}
@@ -61,6 +70,13 @@ export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
           <WordCard key={`${w.text}-${index}`} word={w.text} lang={w.lang} onStopPhrase={handleStop} />
         ))}
       </div>
+
+      {showDrawing && (
+        <DrawingCanvas
+          phrase={sentence}
+          onClose={() => setShowDrawing(false)}
+        />
+      )}
     </div>
   );
 }
