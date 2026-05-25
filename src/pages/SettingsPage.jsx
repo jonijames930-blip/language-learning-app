@@ -3,7 +3,7 @@ import { useLanguage } from '../context/useLanguage';
 import { exportLessons, importLessons } from '../utils/storage';
 
 export default function SettingsPage() {
-  const { t, appLanguage, changeLanguage } = useLanguage();
+  const { t, appLanguage, changeLanguage, darkMode, toggleDarkMode } = useLanguage();
   const fileInputRef = useRef(null);
   const [notification, setNotification] = useState('');
 
@@ -55,6 +55,17 @@ export default function SettingsPage() {
               <span className="lang-name">{lang.name}</span>
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <h3>{t('darkMode')}</h3>
+        <div className="dark-mode-toggle">
+          <span>{darkMode ? '🌙' : '☀️'} {t('darkMode')}</span>
+          <label className="toggle-switch">
+            <input type="checkbox" checked={darkMode} onChange={toggleDarkMode} />
+            <span className="toggle-slider" />
+          </label>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { parseSentencesWithLang } from '../utils/speech';
 import { saveLesson } from '../utils/storage';
 import PhraseCard from '../components/PhraseCard';
 import ListeningTest from '../components/ListeningTest';
+import WordScrambleTest from '../components/WordScrambleTest';
 
 const INPUT_TEXT_KEY = 'input_text';
 const INPUT_LANG_KEY = 'input_lang';
@@ -29,6 +30,7 @@ export default function InputPage() {
   const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem(INPUT_LANG_KEY) || 'auto');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [lessonName, setLessonName] = useState('');
+  const [lessonTag, setLessonTag] = useState('');
   const [notification, setNotification] = useState('');
   const [testMode, setTestMode] = useState(null);
 
@@ -56,6 +58,14 @@ export default function InputPage() {
     setPhrases([]);
   };
 
+  const defaultTags = [
+    t('beginner') || 'Beginner',
+    t('dailyLife') || 'Daily Life',
+    t('travel') || 'Travel',
+    t('work') || 'Work',
+    t('grammar') || 'Grammar',
+  ];
+
   const handleSave = () => {
     if (!lessonName.trim() || phrases.length === 0) return;
     saveLesson({
@@ -63,9 +73,11 @@ export default function InputPage() {
       sentences: phrases.map(p => p.text),
       phraseLangs: phrases.map(p => p.lang),
       lang: phrases[0]?.lang || 'en',
+      tag: lessonTag || '',
     });
     setShowSaveModal(false);
     setLessonName('');
+    setLessonTag('');
     setNotification(t('savedSuccessfully'));
     setTimeout(() => setNotification(''), 3000);
   };
@@ -106,6 +118,18 @@ export default function InputPage() {
     }
 
     const nonArabicPhrases = phrases.filter(p => p.lang !== 'ar');
+
+    if (testMode === 'scramble') {
+      return (
+        <div className="page input-page">
+          <WordScrambleTest
+            phrases={nonArabicPhrases}
+            onClose={() => setTestMode(null)}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="page input-page">
         <ListeningTest
@@ -177,6 +201,12 @@ export default function InputPage() {
           >
             🎧 {t('wordListeningTest')}
           </button>
+          <button
+            className="btn btn-accent"
+            onClick={() => setTestMode('scramble')}
+          >
+            🧩 {t('wordScramble')}
+          </button>
         </div>
       )}
 
@@ -206,6 +236,25 @@ export default function InputPage() {
                 if (e.key === 'Enter') handleSave();
               }}
             />
+            <div className="tag-selector">
+              {defaultTags.map(tag => (
+                <button
+                  key={tag}
+                  className={`tag-btn ${lessonTag === tag ? 'active-tag' : ''}`}
+                  onClick={() => setLessonTag(lessonTag === tag ? '' : tag)}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+            <div className="tag-input-row">
+              <input
+                type="text"
+                value={lessonTag}
+                onChange={(e) => setLessonTag(e.target.value)}
+                placeholder={t('customTag') || 'Custom tag...'}
+              />
+            </div>
             <div className="modal-actions">
               <button className="btn btn-primary" onClick={handleSave}>
                 {t('save')}

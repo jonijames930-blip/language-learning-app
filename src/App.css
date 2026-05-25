@@ -22,6 +22,26 @@
   --radius-xs: 6px;
 }
 
+[data-theme="dark"] {
+  --primary: #818cf8;
+  --primary-hover: #6366f1;
+  --primary-light: #1e1b4b;
+  --success: #4ade80;
+  --success-hover: #22c55e;
+  --danger: #f87171;
+  --danger-hover: #ef4444;
+  --accent: #a78bfa;
+  --accent-hover: #8b5cf6;
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --text: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --border: #334155;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3), 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
 /* ========== Global Reset ========== */
 * {
   margin: 0;
@@ -1375,6 +1395,248 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* ========== Dark Mode Fixes ========== */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .nav-tab {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .nav-tab.active {
+  color: var(--primary);
+}
+
+[data-theme="dark"] .btn-icon {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+[data-theme="dark"] .lang-option {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.dark-mode-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--border);
+  border-radius: 28px;
+  transition: background 0.3s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: white;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.3s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--primary);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(24px);
+}
+
+/* ========== Context Explanation ========== */
+.context-explanation {
+  background: var(--primary-light);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.explanation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--primary);
+}
+
+.explanation-text {
+  font-size: 0.95rem;
+  line-height: 1.8;
+  color: var(--text);
+}
+
+.btn-explain {
+  border-color: var(--primary) !important;
+}
+
+/* ========== Tags/Folders ========== */
+.tag-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.tag-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tag-btn.active-tag {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.tag-input-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tag-input-row input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  font-size: 0.85rem;
+}
+
+.lesson-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border-radius: 10px;
+  font-size: 0.7rem;
+  margin-left: 6px;
+}
+
+.filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+/* ========== Word Scramble ========== */
+.scramble-test {
+  padding: 10px 0;
+}
+
+.scramble-hint {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+}
+
+.scramble-dropzone {
+  min-height: 60px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: var(--surface);
+  align-items: center;
+}
+
+.scramble-dropzone.correct-zone {
+  border-color: var(--success);
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.scramble-dropzone.wrong-zone {
+  border-color: var(--danger);
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.scramble-word-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.scramble-word {
+  padding: 8px 16px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.scramble-word:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.scramble-word.placed {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.scramble-placed-word {
+  padding: 8px 16px;
+  background: var(--primary);
+  color: white;
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.scramble-placed-word:hover {
+  background: var(--danger);
 }
 
 /* ========== Responsive ========== */

@@ -4,6 +4,7 @@ import { getLessons, updateLesson } from '../utils/storage';
 import { detectLanguage } from '../utils/speech';
 import PhraseCard from '../components/PhraseCard';
 import ListeningTest from '../components/ListeningTest';
+import WordScrambleTest from '../components/WordScrambleTest';
 
 function buildPhrases(lesson, langOverride) {
   return lesson.sentences.map((s, i) => {
@@ -96,6 +97,17 @@ export default function StudyPage() {
       );
     }
 
+    if (testMode === 'scramble') {
+      return (
+        <div className="page study-page">
+          <WordScrambleTest
+            phrases={nonArabic}
+            onClose={() => setTestMode(null)}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="page study-page">
         <ListeningTest
@@ -171,6 +183,12 @@ export default function StudyPage() {
               onClick={() => setTestMode('words')}
             >
               🎧 {t('wordListeningTest')}
+            </button>
+            <button
+              className="btn btn-accent"
+              onClick={() => setTestMode('scramble')}
+            >
+              🧩 {t('wordScramble')}
             </button>
           </div>
         )}

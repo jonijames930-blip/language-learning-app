@@ -11,6 +11,13 @@ export default function LessonsPage() {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [notification, setNotification] = useState('');
+  const [filterTag, setFilterTag] = useState('');
+
+  const allTags = [...new Set(lessons.map(l => l.tag).filter(Boolean))];
+
+  const filteredLessons = filterTag
+    ? lessons.filter(l => l.tag === filterTag)
+    : lessons;
 
   const handleDeleteLesson = (lessonId) => {
     setConfirmAction({
@@ -85,16 +92,39 @@ export default function LessonsPage() {
 
       {notification && <div className="notification success">{notification}</div>}
 
-      {lessons.length === 0 ? (
+      {allTags.length > 0 && (
+        <div className="filter-tags">
+          <button
+            className={`tag-btn ${filterTag === '' ? 'active-tag' : ''}`}
+            onClick={() => setFilterTag('')}
+          >
+            {t('all') || 'All'}
+          </button>
+          {allTags.map(tag => (
+            <button
+              key={tag}
+              className={`tag-btn ${filterTag === tag ? 'active-tag' : ''}`}
+              onClick={() => setFilterTag(filterTag === tag ? '' : tag)}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {filteredLessons.length === 0 ? (
         <div className="empty-state">
           <p>{t('noLessons')}</p>
         </div>
       ) : (
         <div className="lessons-list">
-          {lessons.map(lesson => (
+          {filteredLessons.map(lesson => (
             <div key={lesson.id} className="lesson-card">
               <div className="lesson-info" onClick={() => setSelectedLesson(lesson)}>
-                <h3>{lesson.name}</h3>
+                <h3>
+                  {lesson.name}
+                  {lesson.tag && <span className="lesson-tag">{lesson.tag}</span>}
+                </h3>
                 <span className="lesson-meta">
                   {lesson.sentences.length} {t('phrases')} • {lesson.lang?.toUpperCase()}
                 </span>
