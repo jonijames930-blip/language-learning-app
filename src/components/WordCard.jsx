@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { speakLoop, stopSpeaking } from '../utils/speech';
 import { getWordDetails, getCommonPhrases, getGoogleClipArtUrl } from '../utils/translate';
+import { showRewarded } from '../utils/admob';
 import DrawingCanvas from './DrawingCanvas';
 
 export default function WordCard({ word, lang, onStopPhrase }) {
@@ -29,6 +30,8 @@ export default function WordCard({ word, lang, onStopPhrase }) {
       stopAll();
       return;
     }
+    const rewarded = await showRewarded();
+    if (!rewarded) return;
     setLoading(true);
     try {
       const result = await getWordDetails(word, lang);

@@ -100,6 +100,7 @@ const translations = {
     all: 'الكل',
     wordScramble: 'ترتيب الجملة',
     scrambleHint: 'استمع للجملة ثم رتب الكلمات بالترتيب الصحيح',
+    unlockHint: 'فتح تلميح',
   },
   fr: {
     appTitle: 'Apprendre les langues',
@@ -202,6 +203,7 @@ const translations = {
     all: 'Tout',
     wordScramble: 'Ordre des mots',
     scrambleHint: 'Écoutez la phrase puis mettez les mots dans le bon ordre',
+    unlockHint: 'Débloquer un indice',
   },
   en: {
     appTitle: 'Language Learning',
@@ -304,6 +306,7 @@ const translations = {
     all: 'All',
     wordScramble: 'Word Scramble',
     scrambleHint: 'Listen to the sentence then arrange the words in correct order',
+    unlockHint: 'Unlock Hint',
   },
 };
 

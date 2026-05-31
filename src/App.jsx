@@ -1,22 +1,31 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from './context/useLanguage';
 import InputPage from './pages/InputPage';
 import LessonsPage from './pages/LessonsPage';
 import StudyPage from './pages/StudyPage';
 import TranslatePage from './pages/TranslatePage';
 import SettingsPage from './pages/SettingsPage';
-import { showBanner, prepareInterstitial, showInterstitial } from './utils/admob';
+import { showBanner, hideBanner, prepareInterstitial, prepareRewarded } from './utils/admob';
 import './App.css';
+
+const LESSON_TABS = ['lessons', 'study'];
 
 function App() {
   const [activeTab, setActiveTab] = useState('input');
   const { t, isRTL } = useLanguage();
-  const tabSwitchCount = useRef(0);
 
   useEffect(() => {
-    showBanner();
     prepareInterstitial();
+    prepareRewarded();
   }, []);
+
+  useEffect(() => {
+    if (LESSON_TABS.includes(activeTab)) {
+      showBanner();
+    } else {
+      hideBanner();
+    }
+  }, [activeTab]);
 
   const tabs = [
     { id: 'input', label: t('inputTab'), icon: '✏️' },
@@ -48,15 +57,7 @@ function App() {
           <button
             key={tab.id}
             className={`nav-tab ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => {
-              if (tab.id !== activeTab) {
-                tabSwitchCount.current++;
-                if (tabSwitchCount.current % 3 === 0) {
-                  showInterstitial();
-                }
-              }
-              setActiveTab(tab.id);
-            }}
+            onClick={() => setActiveTab(tab.id)}
           >
             <span className="tab-icon">{tab.icon}</span>
             <span className="tab-label">{tab.label}</span>

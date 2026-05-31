@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { speakLoop, stopSpeaking, parseWordsWithLang } from '../utils/speech';
 import { playCorrectSound, playWrongSound } from '../utils/sounds';
+import { showRewarded, showInterstitialOnLessonComplete } from '../utils/admob';
 
 export default function ListeningTest({ phrases, onClose, testType }) {
   const { t } = useLanguage();
@@ -11,6 +12,7 @@ export default function ListeningTest({ phrases, onClose, testType }) {
   const [results, setResults] = useState([]);
   const [testComplete, setTestComplete] = useState(false);
   const [activeSpeed, setActiveSpeed] = useState(null);
+  const [hintUnlocked, setHintUnlocked] = useState(false);
 
   const items =
     testType === 'words'
@@ -58,11 +60,20 @@ export default function ListeningTest({ phrases, onClose, testType }) {
       setTestComplete(true);
       stopSpeaking();
       setActiveSpeed(null);
+      showInterstitialOnLessonComplete();
     } else {
       setCurrentIndex(currentIndex + 1);
       setUserAnswer('');
       setShowAnswer(false);
       setActiveSpeed(null);
+      setHintUnlocked(false);
+    }
+  };
+
+  const handleUnlockHint = async () => {
+    const rewarded = await showRewarded();
+    if (rewarded) {
+      setHintUnlocked(true);
     }
   };
 
@@ -176,6 +187,14 @@ export default function ListeningTest({ phrases, onClose, testType }) {
           disabled={showAnswer}
           autoFocus
         />
+        {!showAnswer && !hintUnlocked && (
+          <button className="btn btn-accent btn-hint" onClick={handleUnlockHint}>
+            🔓 {t('unlockHint') || 'Unlock Hint'}
+          </button>
+        )}
+        {hintUnlocked && !showAnswer && (
+          <p className="hint-text">💡 {currentItem.text.slice(0, Math.ceil(currentItem.text.length / 2))}...</p>
+        )}
       </div>
 
       {showAnswer && (

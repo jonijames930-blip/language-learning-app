@@ -793,6 +793,20 @@ body {
   margin-bottom: 16px;
 }
 
+.btn-hint {
+  margin-top: 10px;
+  font-size: 0.85rem;
+}
+
+.hint-text {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: var(--primary-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
 .test-instruction {
   font-size: 0.9rem;
   color: var(--text-secondary);
