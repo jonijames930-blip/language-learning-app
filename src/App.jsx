@@ -1,15 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from './context/useLanguage';
 import InputPage from './pages/InputPage';
 import LessonsPage from './pages/LessonsPage';
 import StudyPage from './pages/StudyPage';
 import TranslatePage from './pages/TranslatePage';
 import SettingsPage from './pages/SettingsPage';
+import { showBanner, prepareInterstitial, showInterstitial } from './utils/admob';
 import './App.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState('input');
   const { t, isRTL } = useLanguage();
+  const tabSwitchCount = useRef(0);
+
+  useEffect(() => {
+    showBanner();
+    prepareInterstitial();
+  }, []);
 
   const tabs = [
     { id: 'input', label: t('inputTab'), icon: '✏️' },
@@ -41,7 +48,15 @@ function App() {
           <button
             key={tab.id}
             className={`nav-tab ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => {
+              if (tab.id !== activeTab) {
+                tabSwitchCount.current++;
+                if (tabSwitchCount.current % 3 === 0) {
+                  showInterstitial();
+                }
+              }
+              setActiveTab(tab.id);
+            }}
           >
             <span className="tab-icon">{tab.icon}</span>
             <span className="tab-label">{tab.label}</span>
