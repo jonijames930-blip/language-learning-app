@@ -95,12 +95,18 @@ export async function prepareRewarded() {
 }
 
 export async function showRewarded() {
-  const AdMob = await getAdMob();
-  if (!AdMob || !rewardedLoaded) {
-    return true;
-  }
   try {
-    const result = await AdMob.showRewardVideoAd();
+    const AdMob = await Promise.race([
+      getAdMob(),
+      new Promise(resolve => setTimeout(() => resolve(null), 3000)),
+    ]);
+    if (!AdMob || !rewardedLoaded) {
+      return true;
+    }
+    await Promise.race([
+      AdMob.showRewardVideoAd(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000)),
+    ]);
     rewardedLoaded = false;
     setTimeout(() => prepareRewarded(), 1000);
     return true;
@@ -108,7 +114,7 @@ export async function showRewarded() {
     console.error('Rewarded show failed:', e);
     rewardedLoaded = false;
     prepareRewarded();
-    return false;
+    return true;
   }
 }
 

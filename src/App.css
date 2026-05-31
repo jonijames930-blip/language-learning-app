@@ -1729,4 +1729,95 @@ body {
     flex-direction: column;
     align-items: stretch;
   }
+
+  .contact-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ========== Contact Section ========== */
+.contact-section h3 {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: #fff;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow);
+}
+
+.contact-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.contact-item:active {
+  transform: translateY(0);
+}
+
+.contact-item.whatsapp {
+  background: linear-gradient(135deg, #25d366, #128c7e);
+}
+
+.contact-item.email {
+  background: linear-gradient(135deg, #ea4335, #c5221f);
+}
+
+.contact-item.tiktok {
+  background: linear-gradient(135deg, #010101, #333);
+}
+
+[data-theme="dark"] .contact-item.tiktok {
+  background: linear-gradient(135deg, #333, #555);
+}
+
+.contact-item.instagram {
+  background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.contact-item.facebook {
+  background: linear-gradient(135deg, #1877f2, #0d65d9);
+}
+
+.contact-item.snapchat {
+  background: linear-gradient(135deg, #fffc00, #f7e600);
+  color: #333;
+}
+
+.contact-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.contact-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.contact-value {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
