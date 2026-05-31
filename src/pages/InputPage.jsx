@@ -3,8 +3,6 @@ import { useLanguage } from '../context/useLanguage';
 import { parseSentencesWithLang } from '../utils/speech';
 import { saveLesson } from '../utils/storage';
 import PhraseCard from '../components/PhraseCard';
-import ListeningTest from '../components/ListeningTest';
-import WordScrambleTest from '../components/WordScrambleTest';
 
 const INPUT_TEXT_KEY = 'syrian_input_text_v2';
 const INPUT_LANG_KEY = 'syrian_input_lang_v2';
@@ -32,7 +30,6 @@ export default function InputPage() {
   const [lessonName, setLessonName] = useState('');
   const [lessonTag, setLessonTag] = useState('');
   const [notification, setNotification] = useState('');
-  const [testMode, setTestMode] = useState(null);
 
   useEffect(() => {
     localStorage.setItem(INPUT_TEXT_KEY, text);
@@ -98,49 +95,6 @@ export default function InputPage() {
     { value: 'ko', label: '한국어' },
   ];
 
-  const hasNonArabic = phrases.some(p => p.lang !== 'ar');
-
-  if (testMode && phrases.length > 0) {
-    if (!hasNonArabic) {
-      return (
-        <div className="page input-page">
-          <div className="test-notice">
-            <p>{t('listeningTest')} - {t('arabic')}</p>
-            <p style={{ marginTop: '10px', opacity: 0.7 }}>
-              اختبار الاستماع متاح فقط للغات الأجنبية
-            </p>
-            <button className="btn btn-secondary" onClick={() => setTestMode(null)}>
-              {t('back')}
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    const nonArabicPhrases = phrases.filter(p => p.lang !== 'ar');
-
-    if (testMode === 'scramble') {
-      return (
-        <div className="page input-page">
-          <WordScrambleTest
-            phrases={nonArabicPhrases}
-            onClose={() => setTestMode(null)}
-          />
-        </div>
-      );
-    }
-
-    return (
-      <div className="page input-page">
-        <ListeningTest
-          phrases={nonArabicPhrases}
-          testType={testMode}
-          onClose={() => setTestMode(null)}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="page input-page">
       <div className="input-section">
@@ -186,29 +140,6 @@ export default function InputPage() {
       </div>
 
       {notification && <div className="notification success">{notification}</div>}
-
-      {phrases.length > 0 && hasNonArabic && (
-        <div className="test-buttons">
-          <button
-            className="btn btn-accent"
-            onClick={() => setTestMode('sentences')}
-          >
-            🎧 {t('sentenceListeningTest')}
-          </button>
-          <button
-            className="btn btn-accent"
-            onClick={() => setTestMode('words')}
-          >
-            🎧 {t('wordListeningTest')}
-          </button>
-          <button
-            className="btn btn-accent"
-            onClick={() => setTestMode('scramble')}
-          >
-            🧩 {t('wordScramble')}
-          </button>
-        </div>
-      )}
 
       <div className="phrases-section">
         {phrases.map((phrase, index) => (

@@ -1978,6 +1978,23 @@ body {
   100% { transform: scale(0); opacity: 0; }
 }
 
+.game-controls {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.correct-answer-reveal {
+  text-align: center;
+  padding: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--success);
+  background: rgba(22, 163, 74, 0.1);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+}
+
 .game-hint {
   text-align: center;
   padding: 12px;

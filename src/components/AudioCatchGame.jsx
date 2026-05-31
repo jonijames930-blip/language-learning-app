@@ -4,8 +4,8 @@ import { speakLoop, stopSpeaking } from '../utils/speech';
 import { playCorrectSound, playWrongSound } from '../utils/sounds';
 
 const BUBBLE_COUNT = 4;
-const ROUND_TIME = 5;
-const FALL_DURATION = 6;
+const ROUND_TIME = 6;
+const FALL_DURATION = 7;
 
 function shuffle(arr) {
   const a = [...arr];
@@ -14,6 +14,10 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+function cleanWord(text) {
+  return text.replace(/[.,!?;:'"()[\]{}]/g, '').trim();
 }
 
 export default function AudioCatchGame({ phrases, onClose }) {
@@ -27,72 +31,84 @@ export default function AudioCatchGame({ phrases, onClose }) {
   const [answered, setAnswered] = useState(false);
   const [totalRounds, setTotalRounds] = useState(0);
   const [feedback, setFeedback] = useState(null);
+  const [showCorrectAnswer, setShowCorrectAnswer] = useState(null);
   const timerRef = useRef(null);
   const roundRef = useRef(0);
-
-  const allWords = useRef([]);
+  const wordsPool = useRef([]);
 
   useEffect(() => {
     const words = [];
+    const seen = new Set();
     phrases.forEach(p => {
-      p.text.split(/\s+/).filter(w => w.length > 1).forEach(w => {
-        words.push({ text: w, lang: p.lang });
+      const parts = p.text.split(/\s+/).filter(w => w.length > 1);
+      parts.forEach(w => {
+        const clean = cleanWord(w);
+        if (clean.length > 1 && !seen.has(clean.toLowerCase())) {
+          seen.add(clean.toLowerCase());
+          words.push({ text: clean, lang: p.lang });
+        }
       });
     });
-    allWords.current = words.length > 0 ? words : phrases.map(p => ({ text: p.text, lang: p.lang }));
-    setTotalRounds(Math.min(allWords.current.length, 10));
+    wordsPool.current = words.length >= BUBBLE_COUNT ? shuffle(words) : words;
+    const rounds = Math.min(wordsPool.current.length, 10);
+    setTotalRounds(rounds);
   }, [phrases]);
 
   const startRound = useCallback((roundIdx) => {
     stopSpeaking();
     setAnswered(false);
     setFeedback(null);
+    setShowCorrectAnswer(null);
     setTimeLeft(ROUND_TIME);
 
-    const words = allWords.current;
-    if (words.length === 0) return;
+    const words = wordsPool.current;
+    if (words.length < 2) return;
 
-    const correct = words[roundIdx % words.length];
+    const correctIdx = roundIdx % words.length;
+    const correct = words[correctIdx];
     setCorrectWord(correct);
 
-    const others = shuffle(words.filter(w => w.text !== correct.text)).slice(0, BUBBLE_COUNT - 1);
-    const options = shuffle([correct, ...others].slice(0, BUBBLE_COUNT));
+    const otherWords = words.filter((_, i) => i !== correctIdx);
+    const others = shuffle(otherWords).slice(0, BUBBLE_COUNT - 1);
+    const options = shuffle([correct, ...others]);
 
     const bubblesData = options.map((w, i) => ({
       id: i,
       text: w.text,
-      left: 10 + Math.random() * 60,
-      delay: Math.random() * 1.5,
+      lang: w.lang,
+      left: 5 + (i * (80 / options.length)) + Math.random() * 10,
+      delay: Math.random() * 1,
       isCorrect: w.text === correct.text,
       popped: false,
     }));
     setBubbles(bubblesData);
 
     setTimeout(() => {
-      speakLoop(correct.text, correct.lang, 0.8);
-    }, 300);
+      speakLoop(correct.text, correct.lang, 0.85);
+    }, 500);
 
     if (timerRef.current) clearInterval(timerRef.current);
-    let t = ROUND_TIME;
+    let remaining = ROUND_TIME;
     timerRef.current = setInterval(() => {
-      t -= 0.1;
-      if (t <= 0) {
+      remaining -= 0.1;
+      if (remaining <= 0) {
         clearInterval(timerRef.current);
         setTimeLeft(0);
         setAnswered(true);
         setFeedback('timeout');
+        setShowCorrectAnswer(correct.text);
         stopSpeaking();
         playWrongSound();
-        setTimeout(() => nextRound(roundIdx), 2000);
+        setTimeout(() => nextRound(roundIdx), 2500);
       } else {
-        setTimeLeft(t);
+        setTimeLeft(remaining);
       }
     }, 100);
   }, []);
 
   const nextRound = useCallback((currentRound) => {
     const next = currentRound + 1;
-    const maxRounds = Math.min(allWords.current.length, 10);
+    const maxRounds = Math.min(wordsPool.current.length, 10);
     if (next >= maxRounds) {
       setGameOver(true);
       stopSpeaking();
@@ -105,7 +121,7 @@ export default function AudioCatchGame({ phrases, onClose }) {
   }, [startRound]);
 
   useEffect(() => {
-    if (allWords.current.length > 0 && !gameOver) {
+    if (wordsPool.current.length >= 2 && totalRounds > 0 && !gameOver) {
       startRound(0);
     }
     return () => {
@@ -127,23 +143,33 @@ export default function AudioCatchGame({ phrases, onClose }) {
       setBubbles(prev => prev.map(b => b.id === bubble.id ? { ...b, popped: true } : b));
     } else {
       setFeedback('wrong');
+      setShowCorrectAnswer(correctWord?.text);
       playWrongSound();
     }
 
-    setTimeout(() => nextRound(roundRef.current), 1500);
+    setTimeout(() => nextRound(roundRef.current), 1800);
+  };
+
+  const handleReplay = () => {
+    if (correctWord) {
+      stopSpeaking();
+      speakLoop(correctWord.text, correctWord.lang, 0.85);
+    }
   };
 
   const handleRestart = () => {
+    wordsPool.current = shuffle(wordsPool.current);
     setScore(0);
     setRound(0);
     roundRef.current = 0;
     setGameOver(false);
     setAnswered(false);
     setFeedback(null);
+    setShowCorrectAnswer(null);
     startRound(0);
   };
 
-  const maxRounds = Math.min(allWords.current.length, 10);
+  const maxRounds = Math.min(wordsPool.current.length, 10);
   const timerPercent = (timeLeft / ROUND_TIME) * 100;
 
   if (gameOver) {
@@ -188,9 +214,20 @@ export default function AudioCatchGame({ phrases, onClose }) {
         />
       </div>
 
+      <div className="game-controls">
+        <button className="btn btn-accent btn-small" onClick={handleReplay} disabled={answered}>
+          🔊 {t('replay') || 'Replay'}
+        </button>
+      </div>
+
       {feedback === 'correct' && <div className="game-feedback correct-feedback">✓</div>}
       {feedback === 'wrong' && <div className="game-feedback wrong-feedback">✗</div>}
       {feedback === 'timeout' && <div className="game-feedback timeout-feedback">{t('timeUp') || "Time's up!"}</div>}
+      {showCorrectAnswer && (
+        <div className="correct-answer-reveal">
+          ✓ {showCorrectAnswer}
+        </div>
+      )}
 
       <div className="bubble-area">
         {bubbles.map(bubble => (
