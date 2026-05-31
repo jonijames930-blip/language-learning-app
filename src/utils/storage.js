@@ -1,4 +1,4 @@
-const LESSONS_KEY = 'language_lessons';
+const LESSONS_KEY = 'syrian_lessons_v2';
 
 export function getLessons() {
   try {
@@ -54,7 +54,7 @@ export function updateLesson(lessonId, updates) {
 export async function exportLessons() {
   const lessons = getLessons();
   const data = JSON.stringify(lessons, null, 2);
-  const fileName = `lessons_backup_${new Date().toISOString().slice(0, 10)}.json`;
+  const fileName = `syrian_${new Date().toISOString().slice(0, 10)}.json`;
 
   try {
     const { Capacitor } = await import('@capacitor/core');
@@ -71,9 +71,9 @@ export async function exportLessons() {
 
       await Share.share({
         title: fileName,
-        text: 'Language Learning Backup',
         url: result.uri,
         dialogTitle: 'Export Lessons',
+        files: [result.uri],
       });
       return;
     }

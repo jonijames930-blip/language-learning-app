@@ -39,6 +39,10 @@ export default function SettingsPage() {
   };
 
   const handleClearAllData = () => {
+    localStorage.removeItem('syrian_lessons_v2');
+    localStorage.removeItem('syrian_input_text_v2');
+    localStorage.removeItem('syrian_input_sentences_v2');
+    localStorage.removeItem('syrian_input_lang_v2');
     localStorage.removeItem('language_lessons');
     localStorage.removeItem('input_text');
     localStorage.removeItem('input_sentences');

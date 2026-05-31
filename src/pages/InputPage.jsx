@@ -6,9 +6,9 @@ import PhraseCard from '../components/PhraseCard';
 import ListeningTest from '../components/ListeningTest';
 import WordScrambleTest from '../components/WordScrambleTest';
 
-const INPUT_TEXT_KEY = 'input_text';
-const INPUT_LANG_KEY = 'input_lang';
-const INPUT_SENTENCES_KEY = 'input_sentences';
+const INPUT_TEXT_KEY = 'syrian_input_text_v2';
+const INPUT_LANG_KEY = 'syrian_input_lang_v2';
+const INPUT_SENTENCES_KEY = 'syrian_input_sentences_v2';
 
 export default function InputPage() {
   const { t } = useLanguage();
