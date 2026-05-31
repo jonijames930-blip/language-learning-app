@@ -55,14 +55,14 @@ export default function WordCard({ word, lang, onStopPhrase }) {
     speakLoop(word, lang, rate);
   };
 
-  const handleTransSpeak = (text, transLang, key) => {
+  const handleTransSpeak = (text, transLang, key, rate = 1) => {
     if (transLoopId === key) {
       stopAll();
       return;
     }
     stopAll();
     setTransLoopId(key);
-    speakLoop(text, transLang, 1);
+    speakLoop(text, transLang, rate);
   };
 
   const handlePhrases = () => {
@@ -149,6 +149,13 @@ export default function WordCard({ word, lang, onStopPhrase }) {
               <div key={targetLang} className="translation-block">
                 <div className="translation-header">
                   <h4>{langLabels[targetLang]}</h4>
+                  <button
+                    className={`btn-icon btn-icon-sm ${transLoopId === `${targetLang}_slow` ? 'active-loop' : ''}`}
+                    onClick={() => handleTransSpeak(details[targetLang].translation, targetLang, `${targetLang}_slow`, 0.6)}
+                    title={transLoopId === `${targetLang}_slow` ? t('stop') || 'Stop' : t('slowSpeed')}
+                  >
+                    {transLoopId === `${targetLang}_slow` ? '⏹️' : '🐢'}
+                  </button>
                   <button
                     className={`btn-icon btn-icon-sm ${transLoopId === targetLang ? 'active-loop' : ''}`}
                     onClick={() => handleTransSpeak(details[targetLang].translation, targetLang, targetLang)}

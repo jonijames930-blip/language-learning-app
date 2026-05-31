@@ -5,6 +5,7 @@ import { detectLanguage } from '../utils/speech';
 import PhraseCard from '../components/PhraseCard';
 import ListeningTest from '../components/ListeningTest';
 import WordScrambleTest from '../components/WordScrambleTest';
+import AudioCatchGame from '../components/AudioCatchGame';
 
 function buildPhrases(lesson, langOverride) {
   return lesson.sentences.map((s, i) => {
@@ -108,6 +109,17 @@ export default function StudyPage() {
       );
     }
 
+    if (testMode === 'audiocatch') {
+      return (
+        <div className="page study-page">
+          <AudioCatchGame
+            phrases={nonArabic}
+            onClose={() => setTestMode(null)}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="page study-page">
         <ListeningTest
@@ -189,6 +201,12 @@ export default function StudyPage() {
               onClick={() => setTestMode('scramble')}
             >
               🧩 {t('wordScramble')}
+            </button>
+            <button
+              className="btn btn-accent"
+              onClick={() => setTestMode('audiocatch')}
+            >
+              🎯 {t('audioCatch') || 'Audio Catch'}
             </button>
           </div>
         )}

@@ -1797,6 +1797,14 @@ body {
   color: #333;
 }
 
+.contact-item.youtube {
+  background: linear-gradient(135deg, #ff0000, #cc0000);
+}
+
+.contact-item.whatsapp-channel {
+  background: linear-gradient(135deg, #075e54, #128c7e);
+}
+
 .contact-icon {
   width: 28px;
   height: 28px;
@@ -1820,4 +1828,200 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* ========== Audio Catch Game ========== */
+.audio-catch-game {
+  position: relative;
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.game-info {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.game-score {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.game-round {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.timer-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.timer-fill {
+  height: 100%;
+  background: var(--success);
+  border-radius: 4px;
+  transition: width 0.1s linear;
+}
+
+.timer-fill.timer-danger {
+  background: var(--danger);
+}
+
+.game-feedback {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 4rem;
+  font-weight: 900;
+  z-index: 10;
+  animation: feedbackPop 0.4s ease-out;
+  pointer-events: none;
+}
+
+.correct-feedback {
+  color: var(--success);
+}
+
+.wrong-feedback {
+  color: var(--danger);
+}
+
+.timeout-feedback {
+  font-size: 1.5rem;
+  color: var(--danger);
+  background: var(--surface);
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+}
+
+@keyframes feedbackPop {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+  50% { transform: translate(-50%, -50%) scale(1.3); }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+.bubble-area {
+  position: relative;
+  flex: 1;
+  min-height: 350px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(79,70,229,0.05) 0%, rgba(79,70,229,0.15) 100%);
+}
+
+[data-theme="dark"] .bubble-area {
+  background: linear-gradient(180deg, rgba(129,140,248,0.05) 0%, rgba(129,140,248,0.15) 100%);
+}
+
+.bubble {
+  position: absolute;
+  top: -60px;
+  padding: 12px 20px;
+  border-radius: 30px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  animation: bubbleFall linear forwards;
+  box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+  transition: transform 0.15s, opacity 0.3s;
+  z-index: 5;
+}
+
+.bubble:active {
+  transform: scale(0.9);
+}
+
+.bubble-popped {
+  animation: bubblePop 0.4s ease-out forwards !important;
+  background: var(--success) !important;
+}
+
+.bubble-correct {
+  background: var(--success) !important;
+  box-shadow: 0 0 20px rgba(22, 163, 74, 0.5);
+}
+
+.bubble-faded {
+  opacity: 0.4;
+}
+
+@keyframes bubbleFall {
+  0% { top: -60px; }
+  100% { top: calc(100% + 60px); }
+}
+
+@keyframes bubblePop {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.8; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+.game-hint {
+  text-align: center;
+  padding: 12px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.game-over-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+}
+
+.game-over-screen h2 {
+  font-size: 1.8rem;
+}
+
+.final-score {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.score-number {
+  font-size: 4rem;
+  font-weight: 900;
+  color: var(--accent);
+}
+
+.score-total {
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+}
+
+.score-label {
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.game-over-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
 }

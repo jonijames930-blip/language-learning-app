@@ -108,6 +108,12 @@ const translations = {
     contactInstagram: 'إنستغرام',
     contactFacebook: 'فيسبوك',
     contactSnapchat: 'سناب شات',
+    contactYouTube: 'يوتيوب',
+    contactWhatsAppChannel: 'قناة واتساب',
+    audioCatch: 'صائد الاستماع',
+    audioCatchHint: 'استمع للكلمة واضغط على الفقاعة الصحيحة بسرعة',
+    timeUp: 'انتهى الوقت!',
+    points: 'نقاط',
   },
   fr: {
     appTitle: 'Apprendre les langues',
@@ -218,6 +224,12 @@ const translations = {
     contactInstagram: 'Instagram',
     contactFacebook: 'Facebook',
     contactSnapchat: 'Snapchat',
+    contactYouTube: 'YouTube',
+    contactWhatsAppChannel: 'Chaîne WhatsApp',
+    audioCatch: 'Audio Catch',
+    audioCatchHint: 'Écoutez le mot et appuyez rapidement sur la bonne bulle',
+    timeUp: 'Temps écoulé!',
+    points: 'Points',
   },
   en: {
     appTitle: 'Language Learning',
@@ -328,6 +340,12 @@ const translations = {
     contactInstagram: 'Instagram',
     contactFacebook: 'Facebook',
     contactSnapchat: 'Snapchat',
+    contactYouTube: 'YouTube',
+    contactWhatsAppChannel: 'WhatsApp Channel',
+    audioCatch: 'Audio Catch',
+    audioCatchHint: 'Listen to the word and tap the correct bubble quickly',
+    timeUp: 'Time\'s up!',
+    points: 'Points',
   },
 };
 
