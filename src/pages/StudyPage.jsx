@@ -6,6 +6,7 @@ import PhraseCard from '../components/PhraseCard';
 import ListeningTest from '../components/ListeningTest';
 import WordScrambleTest from '../components/WordScrambleTest';
 import AudioCatchGame from '../components/AudioCatchGame';
+import BubblePopGame from '../components/BubblePopGame';
 
 function buildPhrases(lesson, langOverride) {
   return lesson.sentences.map((s, i) => {
@@ -120,6 +121,17 @@ export default function StudyPage() {
       );
     }
 
+    if (testMode === 'bubblepop') {
+      return (
+        <div className="page study-page">
+          <BubblePopGame
+            phrases={nonArabic}
+            onClose={() => setTestMode(null)}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="page study-page">
         <ListeningTest
@@ -192,12 +204,6 @@ export default function StudyPage() {
             </button>
             <button
               className="btn btn-accent"
-              onClick={() => setTestMode('words')}
-            >
-              🎧 {t('wordListeningTest')}
-            </button>
-            <button
-              className="btn btn-accent"
               onClick={() => setTestMode('scramble')}
             >
               🧩 {t('wordScramble')}
@@ -207,6 +213,12 @@ export default function StudyPage() {
               onClick={() => setTestMode('audiocatch')}
             >
               🎯 {t('audioCatch') || 'Audio Catch'}
+            </button>
+            <button
+              className="btn btn-accent"
+              onClick={() => setTestMode('bubblepop')}
+            >
+              🫧 {t('bubblePop') || 'Bubble Pop'}
             </button>
           </div>
         )}

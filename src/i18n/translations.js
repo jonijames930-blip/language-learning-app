@@ -114,6 +114,11 @@ const translations = {
     audioCatchHint: 'استمع للكلمة واضغط على الفقاعة الصحيحة بسرعة',
     timeUp: 'انتهى الوقت!',
     points: 'نقاط',
+    bubblePop: 'تفجير الفقاعات',
+    bubblePopHint: 'فجّر الفقاعة التي تحتوي على الترجمة الصحيحة!',
+    findTheWord: 'جد الكلمة:',
+    loading: 'جاري التحميل...',
+    notEnoughWords: 'لا توجد كلمات كافية لهذه اللعبة',
   },
   fr: {
     appTitle: 'Apprendre les langues',
@@ -230,6 +235,11 @@ const translations = {
     audioCatchHint: 'Écoutez le mot et appuyez rapidement sur la bonne bulle',
     timeUp: 'Temps écoulé!',
     points: 'Points',
+    bubblePop: 'Bubble Pop',
+    bubblePopHint: 'Éclatez la bulle contenant la bonne traduction!',
+    findTheWord: 'Trouvez le mot:',
+    loading: 'Chargement...',
+    notEnoughWords: 'Pas assez de mots pour ce jeu',
   },
   en: {
     appTitle: 'Language Learning',
@@ -346,6 +356,11 @@ const translations = {
     audioCatchHint: 'Listen to the word and tap the correct bubble quickly',
     timeUp: 'Time\'s up!',
     points: 'Points',
+    bubblePop: 'Bubble Pop',
+    bubblePopHint: 'Pop the bubble with the correct translation!',
+    findTheWord: 'Find the word:',
+    loading: 'Loading...',
+    notEnoughWords: 'Not enough words for this game',
   },
 };
 
