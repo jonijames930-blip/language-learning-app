@@ -12,7 +12,6 @@ export default function WordCard({ word, lang, onStopPhrase }) {
   const [activeSpeed, setActiveSpeed] = useState(null);
   const [showPhrases, setShowPhrases] = useState(false);
   const [phrases, setPhrases] = useState(null);
-  const [phrasesLoading, setPhrasesLoading] = useState(false);
   const [phraseLoopId, setPhraseLoopId] = useState(null);
   const [transLoopId, setTransLoopId] = useState(null);
   const [showDrawing, setShowDrawing] = useState(false);
@@ -63,22 +62,15 @@ export default function WordCard({ word, lang, onStopPhrase }) {
     speakLoop(text, transLang, 1);
   };
 
-  const handlePhrases = async () => {
+  const handlePhrases = () => {
     if (showPhrases) {
       setShowPhrases(false);
       stopAll();
       return;
     }
-    if (lang === 'ar') return;
-    setPhrasesLoading(true);
-    try {
-      const result = await getCommonPhrases(word, lang);
-      setPhrases(result);
-      setShowPhrases(true);
-    } catch {
-      setPhrases(null);
-    }
-    setPhrasesLoading(false);
+    const result = getCommonPhrases(word, lang);
+    setPhrases(result);
+    setShowPhrases(true);
   };
 
   const handlePhraseSpeak = (phraseText, phraseLang, index) => {
@@ -131,16 +123,13 @@ export default function WordCard({ word, lang, onStopPhrase }) {
         >
           {loading ? '⏳' : '🌐'}
         </button>
-        {lang !== 'ar' && (
-          <button
-            className="btn-icon btn-phrases"
-            onClick={handlePhrases}
-            disabled={phrasesLoading}
-            title={t('commonPhrases')}
-          >
-            {phrasesLoading ? '⏳' : '💬'}
-          </button>
-        )}
+        <button
+          className="btn-icon btn-phrases"
+          onClick={handlePhrases}
+          title={t('commonPhrases')}
+        >
+          💬
+        </button>
         <button
           className="btn-icon btn-draw"
           onClick={() => setShowDrawing(true)}
@@ -200,7 +189,7 @@ export default function WordCard({ word, lang, onStopPhrase }) {
                 </button>
                 <span className="phrase-example-text">{p.text}</span>
               </div>
-              {p.arabicTranslation && (
+              {p.arabicTranslation && lang !== 'ar' && (
                 <p className="phrase-example-arabic">{p.arabicTranslation}</p>
               )}
             </div>

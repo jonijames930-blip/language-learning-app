@@ -57,73 +57,35 @@ export async function getWordDetails(word, sourceLang) {
   return results;
 }
 
-export async function getCommonPhrases(word, wordLang) {
-  try {
-    const response = await fetch(
-      `${GOOGLE_TRANSLATE_API}?client=gtx&sl=${wordLang}&tl=ar&dt=t&dt=ex&dt=ss&q=${encodeURIComponent(word)}`
-    );
-    const data = await response.json();
+function getDictionaryTemplates(word) {
+  return [
+    { category: 'meaning', fr: `Que signifie le mot "${word}" ?`, en: `What does the word "${word}" mean?`, ar: `ماذا تعني كلمة "${word}"؟` },
+    { category: 'meaning', fr: `Je ne comprends pas le mot "${word}".`, en: `I don't understand the word "${word}".`, ar: `لا أفهم كلمة "${word}".` },
+    { category: 'memory', fr: `J'essaie de retenir le mot "${word}".`, en: `I am trying to remember the word "${word}".`, ar: `أحاول حفظ كلمة "${word}".` },
+    { category: 'memory', fr: `Je dois répéter le mot "${word}" pour ne pas l'oublier.`, en: `I need to repeat the word "${word}" so I don't forget it.`, ar: `يجب أن أكرر كلمة "${word}" لكي لا أنساها.` },
+    { category: 'memory', fr: `Je mémorise le mot "${word}".`, en: `I am memorizing the word "${word}".`, ar: `أنا أحفظ كلمة "${word}".` },
+    { category: 'usage', fr: `Comment utiliser le mot "${word}" dans une phrase ?`, en: `How do I use the word "${word}" in a sentence?`, ar: `كيف أستخدم كلمة "${word}" في جملة؟` },
+    { category: 'usage', fr: `Peux-tu donner un exemple avec "${word}" ?`, en: `Can you give an example with "${word}"?`, ar: `هل يمكنك إعطاء مثال على "${word}"؟` },
+    { category: 'usage', fr: `J'utilise le mot "${word}" dans une phrase.`, en: `I use the word "${word}" in a sentence.`, ar: `أستخدم كلمة "${word}" في جملة.` },
+    { category: 'form', fr: `Comment se prononce "${word}" ?`, en: `How is "${word}" pronounced?`, ar: `كيف تُنطق "${word}"؟` },
+    { category: 'form', fr: `Est-ce difficile d'écrire "${word}" ?`, en: `Is it difficult to write "${word}"?`, ar: `هل من الصعب كتابة "${word}"؟` },
+    { category: 'deep', fr: `Est-ce que "${word}" est un mot courant ?`, en: `Is "${word}" a common word?`, ar: `هل "${word}" كلمة شائعة؟` },
+    { category: 'deep', fr: `Dans quel contexte utilise-t-on "${word}" ?`, en: `In what context is "${word}" used?`, ar: `في أي سياق تُستعمل "${word}"؟` },
+    { category: 'revision', fr: `Je révise le mot "${word}".`, en: `I am reviewing the word "${word}".`, ar: `أراجع كلمة "${word}".` },
+    { category: 'revision', fr: `Je n'oublie pas le mot "${word}".`, en: `I don't forget the word "${word}".`, ar: `لا أنسى كلمة "${word}".` },
+    { category: 'explain', fr: `Pouvez-vous expliquer le mot "${word}"`, en: `Can you explain the word "${word}"`, ar: `هل يمكنك شرح كلمة "${word}"` },
+  ];
+}
 
-    const phrases = [];
-
-    if (data[13]) {
-      for (const group of data[13]) {
-        if (group[2]) {
-          for (const example of group[2]) {
-            if (example[0] && phrases.length < 6) {
-              const original = example[0].replace(/<\/?b>/g, '');
-              phrases.push({ text: original, lang: wordLang });
-            }
-          }
-        }
-      }
-    }
-
-    if (data[11]) {
-      for (const synGroup of data[11]) {
-        if (synGroup[1]) {
-          for (const synSet of synGroup[1]) {
-            if (synSet[3] && phrases.length < 6) {
-              const example = synSet[3].replace(/<\/?b>/g, '');
-              phrases.push({ text: example, lang: wordLang });
-            }
-          }
-        }
-      }
-    }
-
-    if (phrases.length === 0) {
-      const templates = wordLang === 'fr'
-        ? [
-            `Pouvez-vous expliquer le mot "${word}"`,
-            `Je cherche des exemples pour "${word}"`,
-            `J'essaye de retenir le mot "${word}"`,
-          ]
-        : [
-            `Can you explain the word "${word}"`,
-            `I am looking for examples of "${word}"`,
-            `I am trying to remember the word "${word}"`,
-          ];
-      for (const tmpl of templates) {
-        phrases.push({ text: tmpl, lang: wordLang });
-      }
-    }
-
-    const withTranslation = await Promise.all(
-      phrases.map(async (p) => {
-        try {
-          const tr = await translateText(p.text, p.lang, 'ar');
-          return { ...p, arabicTranslation: tr.translation };
-        } catch {
-          return { ...p, arabicTranslation: '' };
-        }
-      })
-    );
-
-    return withTranslation;
-  } catch {
-    return [];
-  }
+export function getCommonPhrases(word, wordLang) {
+  const templates = getDictionaryTemplates(word);
+  const phrases = templates.map(t => ({
+    text: t[wordLang] || t.fr,
+    lang: wordLang,
+    arabicTranslation: wordLang === 'ar' ? '' : t.ar,
+    category: t.category,
+  }));
+  return phrases;
 }
 
 export function getGoogleClipArtUrl(word) {

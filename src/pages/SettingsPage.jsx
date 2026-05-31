@@ -1,11 +1,13 @@
 import { useRef, useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { exportLessons, importLessons } from '../utils/storage';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 export default function SettingsPage() {
   const { t, appLanguage, changeLanguage, darkMode, toggleDarkMode } = useLanguage();
   const fileInputRef = useRef(null);
   const [notification, setNotification] = useState('');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const languages = [
     { code: 'ar', name: t('arabic'), native: 'العربية' },
@@ -34,6 +36,18 @@ export default function SettingsPage() {
     }
     setTimeout(() => setNotification(''), 3000);
     e.target.value = '';
+  };
+
+  const handleClearAllData = () => {
+    localStorage.removeItem('language_lessons');
+    localStorage.removeItem('input_text');
+    localStorage.removeItem('input_sentences');
+    localStorage.removeItem('input_lang');
+    localStorage.removeItem('saved_translations');
+    localStorage.removeItem('saved_drawings');
+    setNotification(t('dataCleared'));
+    setShowClearConfirm(false);
+    setTimeout(() => setNotification(''), 3000);
   };
 
   return (
@@ -87,6 +101,23 @@ export default function SettingsPage() {
           />
         </div>
       </div>
+
+      <div className="settings-section">
+        <h3>{t('clearAllData')}</h3>
+        <div className="backup-actions">
+          <button className="btn btn-danger" onClick={() => setShowClearConfirm(true)}>
+            🗑️ {t('clearAllData')}
+          </button>
+        </div>
+      </div>
+
+      {showClearConfirm && (
+        <ConfirmDialog
+          message={t('confirmClearData')}
+          onConfirm={handleClearAllData}
+          onCancel={() => setShowClearConfirm(false)}
+        />
+      )}
     </div>
   );
 }

@@ -59,23 +59,26 @@ export async function exportLessons() {
   try {
     const { Capacitor } = await import('@capacitor/core');
     if (Capacitor.isNativePlatform()) {
-      const { Filesystem, Directory } = await import('@capacitor/filesystem');
+      const { Filesystem, Directory, Encoding } = await import('@capacitor/filesystem');
       const { Share } = await import('@capacitor/share');
 
       const result = await Filesystem.writeFile({
         path: fileName,
-        data: btoa(unescape(encodeURIComponent(data))),
+        data: data,
         directory: Directory.Cache,
+        encoding: Encoding.UTF8,
       });
 
       await Share.share({
         title: fileName,
+        text: 'Language Learning Backup',
         url: result.uri,
+        dialogTitle: 'Export Lessons',
       });
       return;
     }
-  } catch {
-    // fallback to web download
+  } catch (e) {
+    console.error('Native export failed:', e);
   }
 
   const blob = new Blob([data], { type: 'application/json' });
