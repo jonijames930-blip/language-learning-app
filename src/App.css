@@ -1500,6 +1500,40 @@ body {
   color: var(--text);
 }
 
+.context-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.context-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.context-lang-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent);
+  min-width: 60px;
+}
+
+.context-text {
+  flex: 1;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text);
+  min-width: 120px;
+}
+
+.context-speak-btns {
+  display: flex;
+  gap: 4px;
+}
+
 .btn-explain {
   border-color: var(--primary) !important;
 }

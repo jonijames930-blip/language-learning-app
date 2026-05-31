@@ -130,25 +130,24 @@ export function getGoogleClipArtUrl(word) {
   return `https://www.google.com/search?q=${encodeURIComponent(word + ' clipart')}&tbm=isch`;
 }
 
+function getContextTargetLangs(sentenceLang) {
+  if (sentenceLang === 'fr') return ['ar', 'en'];
+  if (sentenceLang === 'ar') return ['fr', 'en'];
+  if (sentenceLang === 'en') return ['ar', 'fr'];
+  return ['ar', 'fr', 'en'].filter(l => l !== sentenceLang);
+}
+
 export async function explainContext(sentence, sentenceLang) {
   try {
-    const prompt = sentenceLang === 'fr'
-      ? `Expliquez cette phrase en arabe de manière simple pour un étudiant: "${sentence}" - expliquez la grammaire, pourquoi chaque mot est utilisé, et les règles grammaticales.`
-      : sentenceLang === 'en'
-      ? `Explain this sentence in Arabic simply for a student: "${sentence}" - explain the grammar, why each word is used, and the grammatical rules.`
-      : `اشرح هذه الجملة بشكل مبسط: "${sentence}" - اشرح القواعد والتركيب.`;
-
-    const result = await translateText(prompt, sentenceLang === 'ar' ? 'ar' : sentenceLang, 'ar');
-    if (result.translation && result.translation !== prompt) {
-      return result.translation;
-    }
-
-    const directPrompt = sentenceLang === 'fr'
-      ? `Grammaire de "${sentence}": `
-      : `Grammar of "${sentence}": `;
-    const directResult = await translateText(directPrompt, sentenceLang, 'ar');
-    return directResult.translation || '';
+    const targetLangs = getContextTargetLangs(sentenceLang);
+    const results = await Promise.all(
+      targetLangs.map(async (targetLang) => {
+        const result = await translateText(sentence, sentenceLang, targetLang);
+        return { lang: targetLang, text: result.translation || '' };
+      })
+    );
+    return results;
   } catch {
-    return '';
+    return [];
   }
 }

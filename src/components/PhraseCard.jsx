@@ -5,13 +5,52 @@ import { explainContext } from '../utils/translate';
 import WordCard from './WordCard';
 import DrawingCanvas from './DrawingCanvas';
 
+const LANG_NAMES = { ar: 'العربية', fr: 'Français', en: 'English' };
+
+function ContextSpeakBtn({ text, lang }) {
+  const [active, setActive] = useState(null);
+
+  const toggle = (rate) => {
+    const speed = rate < 1 ? 'slow' : 'normal';
+    if (active === speed) {
+      stopSpeaking();
+      setActive(null);
+      return;
+    }
+    stopSpeaking();
+    setActive(speed);
+    speakLoop(text, lang, rate);
+  };
+
+  return (
+    <div className="context-item">
+      <span className="context-lang-label">{LANG_NAMES[lang] || lang}</span>
+      <p className="context-text">{text}</p>
+      <div className="context-speak-btns">
+        <button
+          className={`btn-icon btn-icon-sm ${active === 'slow' ? 'active-loop' : ''}`}
+          onClick={() => toggle(0.6)}
+        >
+          {active === 'slow' ? '⏹️' : '🐢'}
+        </button>
+        <button
+          className={`btn-icon btn-icon-sm ${active === 'normal' ? 'active-loop' : ''}`}
+          onClick={() => toggle(1)}
+        >
+          {active === 'normal' ? '⏹️' : '🔊'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
   const { t } = useLanguage();
   const [activeSpeed, setActiveSpeed] = useState(null);
   const [showDrawing, setShowDrawing] = useState(false);
-  const [explanation, setExplanation] = useState(null);
+  const [contextResults, setContextResults] = useState(null);
   const [explainLoading, setExplainLoading] = useState(false);
-  const [showExplanation, setShowExplanation] = useState(false);
+  const [showContext, setShowContext] = useState(false);
 
   const wordsWithLang = parseWordsWithLang(sentence, lang);
 
@@ -32,22 +71,23 @@ export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
     setActiveSpeed(null);
   };
 
-  const handleExplain = async () => {
-    if (showExplanation) {
-      setShowExplanation(false);
+  const handleContext = async () => {
+    if (showContext) {
+      setShowContext(false);
+      stopSpeaking();
       return;
     }
-    if (explanation) {
-      setShowExplanation(true);
+    if (contextResults) {
+      setShowContext(true);
       return;
     }
     setExplainLoading(true);
     try {
-      const result = await explainContext(sentence, lang);
-      setExplanation(result);
-      setShowExplanation(true);
+      const results = await explainContext(sentence, lang);
+      setContextResults(results);
+      setShowContext(true);
     } catch {
-      setExplanation('');
+      setContextResults([]);
     }
     setExplainLoading(false);
   };
@@ -65,10 +105,10 @@ export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
             🖊️
           </button>
           <button
-            className={`btn-icon btn-explain ${showExplanation ? 'active-loop' : ''}`}
-            onClick={handleExplain}
+            className={`btn-icon btn-explain ${showContext ? 'active-loop' : ''}`}
+            onClick={handleContext}
             disabled={explainLoading}
-            title={t('explainContext') || 'Explain'}
+            title={t('context') || 'Context'}
           >
             {explainLoading ? '⏳' : '🧠'}
           </button>
@@ -98,13 +138,15 @@ export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
         </div>
       </div>
 
-      {showExplanation && explanation && (
+      {showContext && contextResults && contextResults.length > 0 && (
         <div className="context-explanation">
           <div className="explanation-header">
-            <span>🧠 {t('explainContext') || 'Grammar / Context'}</span>
-            <button className="btn-icon btn-icon-sm" onClick={() => setShowExplanation(false)}>✕</button>
+            <span>🧠 {t('context') || 'Context'}</span>
+            <button className="btn-icon btn-icon-sm" onClick={() => { setShowContext(false); stopSpeaking(); }}>✕</button>
           </div>
-          <p className="explanation-text">{explanation}</p>
+          {contextResults.map((item) => (
+            <ContextSpeakBtn key={item.lang} text={item.text} lang={item.lang} />
+          ))}
         </div>
       )}
 

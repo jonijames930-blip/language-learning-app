@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">تعلم اللغات</string>
+    <string name="title_activity_main">تعلم اللغات</string>
+    <string name="package_name">com.languagelearning.app</string>
+    <string name="custom_url_scheme">com.languagelearning.app</string>
+</resources>
