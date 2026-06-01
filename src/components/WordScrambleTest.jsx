@@ -50,6 +50,8 @@ export default function WordScrambleTest({ phrases, onClose }) {
   const handlePlaceWord = (word) => {
     if (result) return;
     setPlaced(prev => [...prev, word]);
+    stopSpeaking();
+    speakLoop(word.text, currentPhrase.lang, 0.85);
   };
 
   const handleRemoveWord = (index) => {

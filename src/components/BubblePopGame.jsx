@@ -27,7 +27,8 @@ export default function BubblePopGame({ phrases, onClose }) {
   const [round, setRound] = useState(0);
   const [timeLeft, setTimeLeft] = useState(ROUND_TIME);
   const [bubbles, setBubbles] = useState([]);
-  const [arabicPrompt, setArabicPrompt] = useState('');
+  const [translationPrompt, setTranslationPrompt] = useState('');
+  const [promptLang, setPromptLang] = useState('en');
   const [correctWord, setCorrectWord] = useState(null);
   const [gameOver, setGameOver] = useState(false);
   const [answered, setAnswered] = useState(false);
@@ -43,6 +44,10 @@ export default function BubblePopGame({ phrases, onClose }) {
     const buildPool = async () => {
       const words = [];
       const seen = new Set();
+      const sourceLang = phrases[0]?.lang || 'fr';
+      const targetLang = sourceLang === 'ar' ? 'en' : (sourceLang === 'fr' ? 'en' : 'fr');
+      setPromptLang(targetLang);
+
       phrases.forEach(p => {
         const parts = p.text.split(/\s+/).filter(w => w.length > 1);
         parts.forEach(w => {
@@ -57,9 +62,9 @@ export default function BubblePopGame({ phrases, onClose }) {
       const translatedWords = [];
       for (const w of words.slice(0, 20)) {
         try {
-          const result = await translateText(w.text, w.lang, 'ar');
+          const result = await translateText(w.text, w.lang, targetLang);
           if (result.translation && result.translation !== w.text) {
-            translatedWords.push({ ...w, arabic: result.translation });
+            translatedWords.push({ ...w, translation: result.translation });
           }
         } catch {
           /* skip word */
@@ -88,7 +93,7 @@ export default function BubblePopGame({ phrases, onClose }) {
     const correctIdx = roundIdx % words.length;
     const correct = words[correctIdx];
     setCorrectWord(correct);
-    setArabicPrompt(correct.arabic);
+    setTranslationPrompt(correct.translation);
 
     const otherWords = words.filter((_, i) => i !== correctIdx);
     const others = shuffle(otherWords).slice(0, BUBBLE_COUNT - 1);
@@ -98,7 +103,6 @@ export default function BubblePopGame({ phrases, onClose }) {
       id: i,
       text: w.text,
       lang: w.lang,
-      arabic: w.arabic,
       left: 8 + (i * (75 / options.length)) + Math.random() * 10,
       delay: Math.random() * 1.2,
       isCorrect: w.text === correct.text,
@@ -107,7 +111,7 @@ export default function BubblePopGame({ phrases, onClose }) {
     setBubbles(bubblesData);
 
     setTimeout(() => {
-      speakLoop(correct.arabic, 'ar', 0.85);
+      speakLoop(correct.text, correct.lang, 0.85);
     }, 500);
 
     if (timerRef.current) clearInterval(timerRef.current);
@@ -179,14 +183,14 @@ export default function BubblePopGame({ phrases, onClose }) {
   const handleReplay = () => {
     if (correctWord) {
       stopSpeaking();
-      speakLoop(correctWord.arabic, 'ar', 0.85);
+      speakLoop(correctWord.text, correctWord.lang, 0.85);
     }
   };
 
   const handleReplaySlow = () => {
     if (correctWord) {
       stopSpeaking();
-      speakLoop(correctWord.arabic, 'ar', 0.5);
+      speakLoop(correctWord.text, correctWord.lang, 0.5);
     }
   };
 
@@ -272,7 +276,7 @@ export default function BubblePopGame({ phrases, onClose }) {
 
       <div className="bubble-pop-prompt">
         <p className="prompt-label">{t('findTheWord') || 'Find the word:'}</p>
-        <p className="prompt-arabic">{arabicPrompt}</p>
+        <p className="prompt-arabic">{translationPrompt}</p>
         <div className="game-controls">
           <button className="btn btn-accent btn-small" onClick={handleReplaySlow} disabled={answered}>
             🐢 {t('slowSpeed') || 'Slow'}

@@ -2232,6 +2232,13 @@ body {
   padding: 8px;
 }
 
+.grammar-baskets-meanings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
 .grammar-basket {
   display: flex;
   flex-direction: column;
@@ -2271,6 +2278,29 @@ body {
 .basket-label-ar {
   font-size: 0.7rem;
   opacity: 0.7;
+}
+
+.basket-meaning {
+  border-color: var(--primary);
+  padding: 14px 12px;
+  flex-direction: row;
+  justify-content: center;
+  gap: 12px;
+}
+
+.basket-meaning .basket-trans1 {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.basket-meaning .basket-trans2 {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.basket-correct-highlight {
+  border-color: var(--success) !important;
+  background: rgba(22, 163, 74, 0.1);
 }
 
 .stop-sound-btn {

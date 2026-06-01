@@ -275,7 +275,7 @@ export default function StudyPage() {
               className="btn btn-accent"
               onClick={() => setTestMode('grammardefender')}
             >
-              🧺 {t('grammarDefender') || 'Grammar Defender'}
+              📚 {t('grammarDefender') || 'Meanings'}
             </button>
             <button
               className="btn btn-accent"

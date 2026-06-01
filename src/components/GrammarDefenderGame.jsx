@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { speakLoop, stopSpeaking } from '../utils/speech';
+import { translateText } from '../utils/translate';
 import { playCorrectSound, playWrongSound } from '../utils/sounds';
 
-const FALL_DURATION = 6;
+const FALL_DURATION = 7;
 const ROUND_COUNT = 10;
 
 function shuffle(arr) {
@@ -15,52 +16,15 @@ function shuffle(arr) {
   return a;
 }
 
-const CATEGORIES = [
-  { id: 'noun', label: 'Nouns', labelAr: 'أسماء' },
-  { id: 'verb', label: 'Verbs', labelAr: 'أفعال' },
-  { id: 'pronoun', label: 'Pronouns', labelAr: 'ضمائر' },
-  { id: 'article', label: 'Articles', labelAr: 'أدوات' },
-  { id: 'adjective', label: 'Adjectives', labelAr: 'صفات' },
-  { id: 'adverb', label: 'Adverbs', labelAr: 'ظروف' },
-];
+function cleanWord(text) {
+  return text.replace(/[.,!?;:'"()[\]{}]/g, '').trim();
+}
 
-const FR_PRONOUNS = ['je', 'tu', 'il', 'elle', 'on', 'nous', 'vous', 'ils', 'elles', 'me', 'te', 'se', 'lui', 'leur', 'moi', 'toi'];
-const FR_ARTICLES = ['le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'au', 'aux', 'à', 'en', 'dans', 'sur', 'sous', 'avec', 'pour', 'par', 'ce', 'cette', 'ces', 'mon', 'ma', 'mes', 'ton', 'ta', 'tes', 'son', 'sa', 'ses'];
-const FR_ADVERBS = ['très', 'bien', 'mal', 'vite', 'lentement', 'toujours', 'jamais', 'souvent', 'aussi', 'encore', 'déjà', 'ici', 'là', 'maintenant', 'aujourd\'hui', 'hier', 'demain', 'beaucoup', 'peu', 'trop'];
-const EN_PRONOUNS = ['i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'its', 'our', 'their', 'this', 'that', 'these', 'those'];
-const EN_ARTICLES = ['the', 'a', 'an', 'in', 'on', 'at', 'to', 'for', 'with', 'from', 'by', 'of', 'about', 'between', 'through', 'after', 'before'];
-const EN_ADVERBS = ['very', 'well', 'badly', 'quickly', 'slowly', 'always', 'never', 'often', 'also', 'still', 'already', 'here', 'there', 'now', 'today', 'yesterday', 'tomorrow', 'much', 'too', 'really'];
-
-function classifyWord(word, lang) {
-  const lower = word.toLowerCase().trim();
-
-  if (lang === 'fr') {
-    if (FR_PRONOUNS.includes(lower)) return 'pronoun';
-    if (FR_ARTICLES.includes(lower)) return 'article';
-    if (FR_ADVERBS.includes(lower)) return 'adverb';
-    if (lower.endsWith('er') || lower.endsWith('ir') || lower.endsWith('re') ||
-        lower.endsWith('ons') || lower.endsWith('ez') || lower.endsWith('ent') ||
-        lower.endsWith('ais') || lower.endsWith('ait') || lower.endsWith('é')) return 'verb';
-    if (lower.endsWith('eux') || lower.endsWith('euse') || lower.endsWith('if') ||
-        lower.endsWith('ive') || lower.endsWith('al') || lower.endsWith('el') ||
-        lower.endsWith('ique')) return 'adjective';
-    return 'noun';
-  }
-
-  if (lang === 'en') {
-    if (EN_PRONOUNS.includes(lower)) return 'pronoun';
-    if (EN_ARTICLES.includes(lower)) return 'article';
-    if (EN_ADVERBS.includes(lower)) return 'adverb';
-    if (lower.endsWith('ing') || lower.endsWith('ed') || lower.endsWith('ize') ||
-        lower.endsWith('ate') || lower.endsWith('ify')) return 'verb';
-    if (lower.endsWith('ful') || lower.endsWith('less') || lower.endsWith('ous') ||
-        lower.endsWith('ive') || lower.endsWith('able') || lower.endsWith('ible') ||
-        lower.endsWith('al') || lower.endsWith('ish')) return 'adjective';
-    if (lower.endsWith('ly')) return 'adverb';
-    return 'noun';
-  }
-
-  return 'noun';
+function getTargetLangs(sourceLang) {
+  if (sourceLang === 'fr') return ['en', 'ar'];
+  if (sourceLang === 'en') return ['fr', 'ar'];
+  if (sourceLang === 'ar') return ['fr', 'en'];
+  return ['en', 'ar'];
 }
 
 export default function GrammarDefenderGame({ phrases, onClose }) {
@@ -68,54 +32,110 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(0);
   const [currentWord, setCurrentWord] = useState(null);
-  const [wordCategory, setWordCategory] = useState(null);
+  const [baskets, setBaskets] = useState([]);
   const [gameOver, setGameOver] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [answered, setAnswered] = useState(false);
   const [fallProgress, setFallProgress] = useState(0);
-  const [activeCategories, setActiveCategories] = useState([]);
+  const [paused, setPaused] = useState(false);
+  const [loading, setLoading] = useState(true);
   const wordsPool = useRef([]);
   const animRef = useRef(null);
+  const pausedRef = useRef(false);
+  const startTimeRef = useRef(0);
+  const pausedElapsedRef = useRef(0);
 
   useEffect(() => {
-    const words = [];
-    const seen = new Set();
-    phrases.forEach(p => {
-      const parts = p.text.split(/\s+/).filter(w => w.length > 1);
-      parts.forEach(w => {
-        const clean = w.replace(/[.,!?;:'"()[\]{}]/g, '').trim();
-        if (clean.length > 1 && !seen.has(clean.toLowerCase())) {
-          seen.add(clean.toLowerCase());
-          const cat = classifyWord(clean, p.lang);
-          words.push({ text: clean, category: cat, lang: p.lang });
-        }
-      });
-    });
+    const buildPool = async () => {
+      const words = [];
+      const seen = new Set();
+      const sourceLang = phrases[0]?.lang || 'fr';
+      const [targetLang1, targetLang2] = getTargetLangs(sourceLang);
 
-    wordsPool.current = shuffle(words);
-    const cats = [...new Set(words.map(w => w.category))];
-    setActiveCategories(cats.length > 1 ? cats : CATEGORIES.map(c => c.id));
+      phrases.forEach(p => {
+        const parts = p.text.split(/\s+/).filter(w => w.length > 1);
+        parts.forEach(w => {
+          const clean = cleanWord(w);
+          if (clean.length > 1 && !seen.has(clean.toLowerCase())) {
+            seen.add(clean.toLowerCase());
+            words.push({ text: clean, lang: p.lang });
+          }
+        });
+      });
+
+      const translatedWords = [];
+      for (const w of words.slice(0, 20)) {
+        try {
+          const r1 = await translateText(w.text, w.lang, targetLang1);
+          const r2 = await translateText(w.text, w.lang, targetLang2);
+          if (r1.translation && r2.translation) {
+            translatedWords.push({
+              ...w,
+              trans1: r1.translation,
+              trans1Lang: targetLang1,
+              trans2: r2.translation,
+              trans2Lang: targetLang2,
+            });
+          }
+        } catch { /* skip */ }
+      }
+
+      wordsPool.current = shuffle(translatedWords);
+      setLoading(false);
+    };
+    buildPool();
   }, [phrases]);
+
+  const generateBaskets = useCallback((correctWord, allWords) => {
+    const correctBasket = {
+      id: 'correct',
+      text1: correctWord.trans1,
+      lang1: correctWord.trans1Lang,
+      text2: correctWord.trans2,
+      lang2: correctWord.trans2Lang,
+      isCorrect: true,
+    };
+
+    const others = allWords.filter(w => w.text !== correctWord.text);
+    const wrongWords = shuffle(others).slice(0, 2);
+    const wrongBaskets = wrongWords.map((w, i) => ({
+      id: `wrong-${i}`,
+      text1: w.trans1,
+      lang1: w.trans1Lang,
+      text2: w.trans2,
+      lang2: w.trans2Lang,
+      isCorrect: false,
+    }));
+
+    return shuffle([correctBasket, ...wrongBaskets]);
+  }, []);
 
   const startRound = useCallback((roundIdx) => {
     setAnswered(false);
     setFeedback(null);
     setFallProgress(0);
+    pausedRef.current = false;
+    setPaused(false);
 
     const pool = wordsPool.current;
-    if (pool.length === 0) return;
+    if (pool.length < 3) return;
     const word = pool[roundIdx % pool.length];
     setCurrentWord(word);
-    setWordCategory(word.category);
+    setBaskets(generateBaskets(word, pool));
 
     stopSpeaking();
     setTimeout(() => speakLoop(word.text, word.lang, 0.85), 300);
 
-    const startTime = Date.now();
+    startTimeRef.current = Date.now();
+    pausedElapsedRef.current = 0;
     const duration = FALL_DURATION * 1000;
 
     const animate = () => {
-      const elapsed = Date.now() - startTime;
+      if (pausedRef.current) {
+        animRef.current = requestAnimationFrame(animate);
+        return;
+      }
+      const elapsed = (Date.now() - startTimeRef.current) - pausedElapsedRef.current;
       const progress = Math.min(elapsed / duration, 1);
       setFallProgress(progress);
 
@@ -124,17 +144,17 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
         setFeedback('timeout');
         stopSpeaking();
         playWrongSound();
-        setTimeout(() => nextRound(roundIdx), 1500);
+        setTimeout(() => nextRound(roundIdx), 1800);
         return;
       }
       animRef.current = requestAnimationFrame(animate);
     };
     animRef.current = requestAnimationFrame(animate);
-  }, []);
+  }, [generateBaskets]);
 
   const nextRound = useCallback((currentRound) => {
     const next = currentRound + 1;
-    if (next >= ROUND_COUNT) {
+    if (next >= ROUND_COUNT || next >= wordsPool.current.length) {
       setGameOver(true);
       stopSpeaking();
     } else {
@@ -144,22 +164,35 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
   }, [startRound]);
 
   useEffect(() => {
-    if (wordsPool.current.length > 0) {
+    if (!loading && wordsPool.current.length >= 3) {
       startRound(0);
     }
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
       stopSpeaking();
     };
-  }, []);
+  }, [loading]);
 
-  const handleBasketClick = (basketId) => {
-    if (answered || gameOver || !currentWord) return;
+  const handlePause = () => {
+    if (paused) {
+      pausedRef.current = false;
+      setPaused(false);
+      startTimeRef.current = Date.now() - pausedElapsedRef.current;
+    } else {
+      pausedRef.current = true;
+      setPaused(true);
+      pausedElapsedRef.current = Date.now() - startTimeRef.current;
+      stopSpeaking();
+    }
+  };
+
+  const handleBasketClick = (basket) => {
+    if (answered || gameOver || !currentWord || paused) return;
     setAnswered(true);
     if (animRef.current) cancelAnimationFrame(animRef.current);
     stopSpeaking();
 
-    if (basketId === wordCategory) {
+    if (basket.isCorrect) {
       setScore(s => s + 1);
       setFeedback('correct');
       playCorrectSound();
@@ -168,7 +201,7 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
       playWrongSound();
     }
 
-    setTimeout(() => nextRound(round), 1200);
+    setTimeout(() => nextRound(round), 1400);
   };
 
   const handleRestart = () => {
@@ -179,12 +212,22 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
     setAnswered(false);
     setFeedback(null);
     setFallProgress(0);
+    setPaused(false);
+    pausedRef.current = false;
     startRound(0);
   };
 
-  const displayCategories = CATEGORIES.filter(c => activeCategories.includes(c.id));
+  if (loading) {
+    return (
+      <div className="grammar-defender-game">
+        <div className="game-over-screen">
+          <p>⏳ {t('loading') || 'Loading...'}</p>
+        </div>
+      </div>
+    );
+  }
 
-  if (wordsPool.current.length < 2) {
+  if (wordsPool.current.length < 3) {
     return (
       <div className="grammar-defender-game">
         <div className="game-over-screen">
@@ -204,7 +247,7 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
           <h2>🎉 {t('testComplete')}</h2>
           <div className="final-score">
             <span className="score-number">{score}</span>
-            <span className="score-total">/ {ROUND_COUNT}</span>
+            <span className="score-total">/ {Math.min(ROUND_COUNT, wordsPool.current.length)}</span>
           </div>
           <div className="game-over-actions">
             <button className="btn btn-primary" onClick={handleRestart}>
@@ -225,9 +268,12 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
         <button className="btn btn-secondary btn-small" onClick={() => { if (animRef.current) cancelAnimationFrame(animRef.current); stopSpeaking(); onClose(); }}>
           ← {t('back')}
         </button>
+        <button className="btn btn-danger btn-small" onClick={handlePause}>
+          {paused ? '▶️' : '⏸️'} {paused ? (t('resume') || 'Resume') : (t('stopSound') || 'Stop')}
+        </button>
         <div className="game-info">
           <span className="game-score">⭐ {score}</span>
-          <span className="game-round">{round + 1}/{ROUND_COUNT}</span>
+          <span className="game-round">{round + 1}/{Math.min(ROUND_COUNT, wordsPool.current.length)}</span>
         </div>
       </div>
 
@@ -235,7 +281,7 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
         {currentWord && (
           <div
             className={`grammar-word ${answered ? (feedback === 'correct' ? 'grammar-word-correct' : 'grammar-word-wrong') : ''}`}
-            style={{ top: `${fallProgress * 80}%` }}
+            style={{ top: `${fallProgress * 75}%` }}
           >
             {currentWord.text}
           </div>
@@ -243,18 +289,22 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
       </div>
 
       {feedback === 'correct' && <div className="game-feedback correct-feedback">✓</div>}
-      {feedback === 'wrong' && <div className="game-feedback wrong-feedback">✗ {wordCategory}</div>}
+      {feedback === 'wrong' && (
+        <div className="game-feedback wrong-feedback">
+          ✗ {currentWord?.trans1} / {currentWord?.trans2}
+        </div>
+      )}
 
-      <div className="grammar-baskets grammar-baskets-grid">
-        {displayCategories.map(cat => (
+      <div className="grammar-baskets grammar-baskets-meanings">
+        {baskets.map(basket => (
           <button
-            key={cat.id}
-            className={`grammar-basket basket-${cat.id}`}
-            onClick={() => handleBasketClick(cat.id)}
-            disabled={answered}
+            key={basket.id}
+            className={`grammar-basket basket-meaning ${answered && basket.isCorrect ? 'basket-correct-highlight' : ''}`}
+            onClick={() => handleBasketClick(basket)}
+            disabled={answered || paused}
           >
-            <span className="basket-label">{cat.label}</span>
-            <span className="basket-label-ar">{cat.labelAr}</span>
+            <span className="basket-trans1">{basket.text1}</span>
+            <span className="basket-trans2">{basket.text2}</span>
           </button>
         ))}
       </div>
