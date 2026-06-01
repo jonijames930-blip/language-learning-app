@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { translateText } from '../utils/translate';
+import { speakLoop, stopSpeaking } from '../utils/speech';
 import { playCorrectSound, playWrongSound } from '../utils/sounds';
 
 const MATCH_COUNT = 4;
@@ -123,10 +124,14 @@ export default function FastMatchGame({ phrases, onClose }) {
     if (matched.includes(item.id)) return;
     setSelectedLeft(item);
     setWrongPair(null);
+    stopSpeaking();
+    speakLoop(item.text, item.lang, 0.85);
   };
 
   const handleRightClick = (item) => {
     if (!selectedLeft || matched.includes(item.matchId)) return;
+    stopSpeaking();
+    speakLoop(item.text, 'ar', 0.85);
 
     if (selectedLeft.id === item.matchId) {
       setMatched(prev => {

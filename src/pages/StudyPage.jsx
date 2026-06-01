@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { getLessons, updateLesson } from '../utils/storage';
-import { detectLanguage } from '../utils/speech';
+import { detectLanguage, stopSpeaking } from '../utils/speech';
 import PhraseCard from '../components/PhraseCard';
 import ListeningTest from '../components/ListeningTest';
 import WordScrambleTest from '../components/WordScrambleTest';
@@ -282,6 +282,12 @@ export default function StudyPage() {
               onClick={() => setTestMode('fastmatch')}
             >
               ⚡ {t('fastMatch') || 'Fast Match'}
+            </button>
+            <button
+              className="btn btn-danger btn-small stop-sound-btn"
+              onClick={() => stopSpeaking()}
+            >
+              🔇 {t('stopSound') || 'Stop Sound'}
             </button>
           </div>
         )}

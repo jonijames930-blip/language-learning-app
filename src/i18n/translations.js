@@ -122,6 +122,7 @@ const translations = {
     grammarDefender: 'صائد القواعد',
     fastMatch: 'مطابقة سريعة',
     matchHint: 'طابق كل كلمة بترجمتها',
+    stopSound: 'إيقاف الصوت',
   },
   fr: {
     appTitle: 'Apprendre les langues',
@@ -244,6 +245,7 @@ const translations = {
     grammarDefender: 'Grammar Defender',
     fastMatch: 'Match Rapide',
     matchHint: 'Associez chaque mot à sa traduction',
+    stopSound: 'Arrêter le son',
     loading: 'Chargement...',
     notEnoughWords: 'Pas assez de mots pour ce jeu',
   },
@@ -368,6 +370,7 @@ const translations = {
     grammarDefender: 'Grammar Defender',
     fastMatch: 'Fast Match',
     matchHint: 'Match each word with its translation',
+    stopSound: 'Stop Sound',
     loading: 'Loading...',
     notEnoughWords: 'Not enough words for this game',
   },
