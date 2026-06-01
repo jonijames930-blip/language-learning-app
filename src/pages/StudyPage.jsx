@@ -7,6 +7,8 @@ import ListeningTest from '../components/ListeningTest';
 import WordScrambleTest from '../components/WordScrambleTest';
 import AudioCatchGame from '../components/AudioCatchGame';
 import BubblePopGame from '../components/BubblePopGame';
+import GrammarDefenderGame from '../components/GrammarDefenderGame';
+import FastMatchGame from '../components/FastMatchGame';
 
 function buildPhrases(lesson, langOverride) {
   return lesson.sentences.map((s, i) => {
@@ -153,6 +155,28 @@ export default function StudyPage() {
       );
     }
 
+    if (testMode === 'grammardefender') {
+      return (
+        <div className="page study-page">
+          <GrammarDefenderGame
+            phrases={nonArabic}
+            onClose={() => setTestMode(null)}
+          />
+        </div>
+      );
+    }
+
+    if (testMode === 'fastmatch') {
+      return (
+        <div className="page study-page">
+          <FastMatchGame
+            phrases={nonArabic}
+            onClose={() => setTestMode(null)}
+          />
+        </div>
+      );
+    }
+
     return (
       <div className="page study-page">
         <ListeningTest
@@ -246,6 +270,18 @@ export default function StudyPage() {
               onClick={() => setTestMode('bubblepop')}
             >
               🫧 {t('bubblePop') || 'Bubble Pop'}
+            </button>
+            <button
+              className="btn btn-accent"
+              onClick={() => setTestMode('grammardefender')}
+            >
+              🧺 {t('grammarDefender') || 'Grammar Defender'}
+            </button>
+            <button
+              className="btn btn-accent"
+              onClick={() => setTestMode('fastmatch')}
+            >
+              ⚡ {t('fastMatch') || 'Fast Match'}
             </button>
           </div>
         )}

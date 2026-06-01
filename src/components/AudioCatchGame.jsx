@@ -5,7 +5,6 @@ import { playCorrectSound, playWrongSound } from '../utils/sounds';
 
 const BUBBLE_COUNT = 3;
 const ROUND_TIME = 6;
-const FALL_DURATION = 7;
 
 function shuffle(arr) {
   const a = [...arr];
@@ -76,8 +75,6 @@ export default function AudioCatchGame({ phrases, onClose }) {
       id: i,
       text: w.text,
       lang: w.lang,
-      left: 5 + (i * (80 / options.length)) + Math.random() * 10,
-      delay: Math.random() * 1,
       isCorrect: w.text === correct.text,
       popped: false,
     }));
@@ -229,16 +226,11 @@ export default function AudioCatchGame({ phrases, onClose }) {
         </div>
       )}
 
-      <div className="bubble-area">
+      <div className="bubble-area bubble-area-static">
         {bubbles.map(bubble => (
           <button
             key={bubble.id}
-            className={`bubble ${bubble.popped ? 'bubble-popped' : ''} ${answered && bubble.isCorrect ? 'bubble-correct' : ''} ${answered && !bubble.isCorrect ? 'bubble-faded' : ''}`}
-            style={{
-              left: `${bubble.left}%`,
-              animationDelay: `${bubble.delay}s`,
-              animationDuration: `${FALL_DURATION}s`,
-            }}
+            className={`bubble-static ${bubble.popped ? 'bubble-popped' : ''} ${answered && bubble.isCorrect ? 'bubble-correct' : ''} ${answered && !bubble.isCorrect ? 'bubble-faded' : ''}`}
             onClick={() => handleBubbleTap(bubble)}
             disabled={answered}
           >

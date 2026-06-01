@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
-import { getLessons, deleteLesson, deleteSentenceFromLesson } from '../utils/storage';
+import { getLessons, deleteLesson, deleteSentenceFromLesson, updateLesson } from '../utils/storage';
 import { detectLanguage } from '../utils/speech';
 import PhraseCard from '../components/PhraseCard';
 import ConfirmDialog from '../components/ConfirmDialog';
@@ -12,6 +12,8 @@ export default function LessonsPage() {
   const [confirmAction, setConfirmAction] = useState(null);
   const [notification, setNotification] = useState('');
   const [filterTag, setFilterTag] = useState('');
+  const [editingLessonId, setEditingLessonId] = useState(null);
+  const [editLessonName, setEditLessonName] = useState('');
 
   const allTags = [...new Set(lessons.map(l => l.tag).filter(Boolean))];
 
@@ -33,6 +35,21 @@ export default function LessonsPage() {
         setConfirmAction(null);
       },
     });
+  };
+
+  const handleEditLessonName = (lesson) => {
+    setEditingLessonId(lesson.id);
+    setEditLessonName(lesson.name);
+  };
+
+  const handleSaveLessonName = () => {
+    if (!editLessonName.trim() || !editingLessonId) return;
+    const updated = updateLesson(editingLessonId, { name: editLessonName.trim() });
+    setLessons(updated);
+    setEditingLessonId(null);
+    setEditLessonName('');
+    setNotification(t('updateSuccess'));
+    setTimeout(() => setNotification(''), 3000);
   };
 
   const handleDeleteSentence = (lessonId, sentenceIndex) => {
@@ -121,15 +138,39 @@ export default function LessonsPage() {
           {filteredLessons.map(lesson => (
             <div key={lesson.id} className="lesson-card">
               <div className="lesson-info" onClick={() => setSelectedLesson(lesson)}>
-                <h3>
-                  {lesson.name}
-                  {lesson.tag && <span className="lesson-tag">{lesson.tag}</span>}
-                </h3>
-                <span className="lesson-meta">
-                  {lesson.sentences.length} {t('phrases')} • {lesson.lang?.toUpperCase()}
-                </span>
+                {editingLessonId === lesson.id ? (
+                  <div className="edit-name-row" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="text"
+                      value={editLessonName}
+                      onChange={(e) => setEditLessonName(e.target.value)}
+                      className="input-edit-name"
+                      autoFocus
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleSaveLessonName(); }}
+                    />
+                    <button className="btn btn-primary btn-small" onClick={handleSaveLessonName}>{t('save')}</button>
+                    <button className="btn btn-secondary btn-small" onClick={() => setEditingLessonId(null)}>{t('cancel')}</button>
+                  </div>
+                ) : (
+                  <>
+                    <h3>
+                      {lesson.name}
+                      {lesson.tag && <span className="lesson-tag">{lesson.tag}</span>}
+                    </h3>
+                    <span className="lesson-meta">
+                      {lesson.sentences.length} {t('phrases')} • {lesson.lang?.toUpperCase()}
+                    </span>
+                  </>
+                )}
               </div>
               <div className="lesson-actions">
+                <button
+                  className="btn-icon btn-icon-sm"
+                  onClick={(e) => { e.stopPropagation(); handleEditLessonName(lesson); }}
+                  title={t('editName')}
+                >
+                  ✏️
+                </button>
                 <button
                   className="btn btn-danger btn-small"
                   onClick={() => handleDeleteLesson(lesson.id)}

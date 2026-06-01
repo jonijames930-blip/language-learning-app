@@ -37,6 +37,11 @@ export default function InputPage() {
 
   useEffect(() => {
     localStorage.setItem(INPUT_LANG_KEY, selectedLang);
+    if (text.trim() && phrases.length > 0) {
+      const overrideLang = selectedLang === 'auto' ? null : selectedLang;
+      const parsed = parseSentencesWithLang(text, overrideLang);
+      setPhrases(parsed);
+    }
   }, [selectedLang]);
 
   useEffect(() => {

@@ -122,7 +122,8 @@ export default function BubblePopGame({ phrases, onClose }) {
         setShowCorrectAnswer(correct.text);
         stopSpeaking();
         playWrongSound();
-        setTimeout(() => nextRound(roundIdx), 2500);
+        setTimeout(() => speakLoop(correct.text, correct.lang, 0.85), 600);
+        setTimeout(() => { stopSpeaking(); nextRound(roundIdx); }, 3000);
       } else {
         setTimeLeft(remaining);
       }
@@ -164,13 +165,15 @@ export default function BubblePopGame({ phrases, onClose }) {
       setFeedback('correct');
       playCorrectSound();
       setBubbles(prev => prev.map(b => b.id === bubble.id ? { ...b, popped: true } : b));
+      setTimeout(() => speakLoop(correctWord.text, correctWord.lang, 0.85), 600);
     } else {
       setFeedback('wrong');
       setShowCorrectAnswer(correctWord?.text);
       playWrongSound();
+      setTimeout(() => speakLoop(correctWord.text, correctWord.lang, 0.85), 600);
     }
 
-    setTimeout(() => nextRound(roundRef.current), 1800);
+    setTimeout(() => { stopSpeaking(); nextRound(roundRef.current); }, 2500);
   };
 
   const handleReplay = () => {
