@@ -6,7 +6,6 @@ import PhraseCard from '../components/PhraseCard';
 import ListeningTest from '../components/ListeningTest';
 import WordScrambleTest from '../components/WordScrambleTest';
 import AudioCatchGame from '../components/AudioCatchGame';
-import BubblePopGame from '../components/BubblePopGame';
 import GrammarDefenderGame from '../components/GrammarDefenderGame';
 import FastMatchGame from '../components/FastMatchGame';
 
@@ -49,6 +48,9 @@ export default function StudyPage() {
   const [langOverride, setLangOverride] = useState('auto');
   const [editingSentenceIdx, setEditingSentenceIdx] = useState(null);
   const [editSentenceText, setEditSentenceText] = useState('');
+  const [preGameMode, setPreGameMode] = useState(null);
+  const [gameSourceLang, setGameSourceLang] = useState('');
+  const [gameTargetLang, setGameTargetLang] = useState('');
 
   const handleSelectLesson = (lesson) => {
     setSelectedLesson(lesson);
@@ -102,9 +104,53 @@ export default function StudyPage() {
     setTimeout(() => setNotification(''), 3000);
   };
 
+  if (preGameMode && !testMode && selectedLesson) {
+    const defaultSrc = langOverride !== 'auto' ? langOverride : (selectedLesson.phraseLangs?.[0] || detectLanguage(selectedLesson.sentences[0] || '') || 'fr');
+    const srcLang = gameSourceLang || defaultSrc;
+    const tgtOpts = langOptions.filter(o => o.value !== 'auto' && o.value !== srcLang);
+    const tgtLang = gameTargetLang || (srcLang === 'fr' ? 'en' : srcLang === 'en' ? 'fr' : 'en');
+
+    return (
+      <div className="page study-page">
+        <div className="pre-game-settings">
+          <h2>⚙️ {t('gameSettings') || 'Game Settings'}</h2>
+          <div className="pre-game-field">
+            <label>{t('textLanguage') || 'Langue du texte'}:</label>
+            <select value={srcLang} onChange={(e) => {
+              setGameSourceLang(e.target.value);
+              if (e.target.value === gameTargetLang) setGameTargetLang('');
+            }}>
+              {langOptions.filter(o => o.value !== 'auto').map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="pre-game-field">
+            <label>{t('targetLanguage') || 'Langue cible'}:</label>
+            <select value={tgtLang} onChange={(e) => setGameTargetLang(e.target.value)}>
+              {tgtOpts.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="pre-game-actions">
+            <button className="btn btn-primary" onClick={() => {
+              setGameSourceLang(srcLang);
+              setGameTargetLang(tgtLang);
+              setTestMode(preGameMode);
+            }}>▶️ {t('start') || 'Start'}</button>
+            <button className="btn btn-secondary" onClick={() => setPreGameMode(null)}>← {t('back')}</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (testMode && selectedLesson) {
-    const phrases = buildPhrases(selectedLesson, langOverride);
-    const nonArabic = phrases.filter(p => p.lang !== 'ar');
+    const srcLangFinal = gameSourceLang || langOverride;
+    const tgtLangFinal = gameTargetLang || 'en';
+    const phrases = buildPhrases(selectedLesson, srcLangFinal !== 'auto' ? srcLangFinal : langOverride);
+    const nonArabic = phrases;
 
     if (nonArabic.length === 0) {
       return (
@@ -127,7 +173,7 @@ export default function StudyPage() {
         <div className="page study-page">
           <WordScrambleTest
             phrases={nonArabic}
-            onClose={() => setTestMode(null)}
+            onClose={() => { setTestMode(null); setPreGameMode(null); }}
           />
         </div>
       );
@@ -138,18 +184,7 @@ export default function StudyPage() {
         <div className="page study-page">
           <AudioCatchGame
             phrases={nonArabic}
-            onClose={() => setTestMode(null)}
-          />
-        </div>
-      );
-    }
-
-    if (testMode === 'bubblepop') {
-      return (
-        <div className="page study-page">
-          <BubblePopGame
-            phrases={nonArabic}
-            onClose={() => setTestMode(null)}
+            onClose={() => { setTestMode(null); setPreGameMode(null); }}
           />
         </div>
       );
@@ -160,7 +195,8 @@ export default function StudyPage() {
         <div className="page study-page">
           <GrammarDefenderGame
             phrases={nonArabic}
-            onClose={() => setTestMode(null)}
+            targetLang={tgtLangFinal}
+            onClose={() => { setTestMode(null); setPreGameMode(null); }}
           />
         </div>
       );
@@ -171,7 +207,8 @@ export default function StudyPage() {
         <div className="page study-page">
           <FastMatchGame
             phrases={nonArabic}
-            onClose={() => setTestMode(null)}
+            targetLang={tgtLangFinal}
+            onClose={() => { setTestMode(null); setPreGameMode(null); }}
           />
         </div>
       );
@@ -182,7 +219,7 @@ export default function StudyPage() {
         <ListeningTest
           phrases={nonArabic}
           testType={testMode}
-          onClose={() => setTestMode(null)}
+          onClose={() => { setTestMode(null); setPreGameMode(null); }}
         />
       </div>
     );
@@ -243,43 +280,37 @@ export default function StudyPage() {
           <div className="test-buttons">
             <button
               className="btn btn-accent"
-              onClick={() => setTestMode('sentences')}
+              onClick={() => { setPreGameMode('sentences'); const dl = langOverride !== 'auto' ? langOverride : (selectedLesson.phraseLangs?.[0] || 'fr'); setGameSourceLang(dl); setGameTargetLang(dl === 'fr' ? 'en' : 'fr'); }}
             >
               🎧 {t('sentenceListeningTest')}
             </button>
             <button
               className="btn btn-accent"
-              onClick={() => setTestMode('words')}
+              onClick={() => { setPreGameMode('words'); const dl = langOverride !== 'auto' ? langOverride : (selectedLesson.phraseLangs?.[0] || 'fr'); setGameSourceLang(dl); setGameTargetLang(dl === 'fr' ? 'en' : 'fr'); }}
             >
               🎧 {t('wordListeningTest')}
             </button>
             <button
               className="btn btn-accent"
-              onClick={() => setTestMode('scramble')}
+              onClick={() => { setPreGameMode('scramble'); const dl = langOverride !== 'auto' ? langOverride : (selectedLesson.phraseLangs?.[0] || 'fr'); setGameSourceLang(dl); setGameTargetLang(dl === 'fr' ? 'en' : 'fr'); }}
             >
               🧩 {t('wordScramble')}
             </button>
             <button
               className="btn btn-accent"
-              onClick={() => setTestMode('audiocatch')}
+              onClick={() => { setPreGameMode('audiocatch'); const dl = langOverride !== 'auto' ? langOverride : (selectedLesson.phraseLangs?.[0] || 'fr'); setGameSourceLang(dl); setGameTargetLang(dl === 'fr' ? 'en' : 'fr'); }}
             >
               🎯 {t('audioCatch') || 'Audio Catch'}
             </button>
             <button
               className="btn btn-accent"
-              onClick={() => setTestMode('bubblepop')}
-            >
-              🫧 {t('bubblePop') || 'Bubble Pop'}
-            </button>
-            <button
-              className="btn btn-accent"
-              onClick={() => setTestMode('grammardefender')}
+              onClick={() => { setPreGameMode('grammardefender'); const dl = langOverride !== 'auto' ? langOverride : (selectedLesson.phraseLangs?.[0] || 'fr'); setGameSourceLang(dl); setGameTargetLang(dl === 'fr' ? 'en' : 'fr'); }}
             >
               📚 {t('grammarDefender') || 'Meanings'}
             </button>
             <button
               className="btn btn-accent"
-              onClick={() => setTestMode('fastmatch')}
+              onClick={() => { setPreGameMode('fastmatch'); const dl = langOverride !== 'auto' ? langOverride : (selectedLesson.phraseLangs?.[0] || 'fr'); setGameSourceLang(dl); setGameTargetLang(dl === 'fr' ? 'en' : 'fr'); }}
             >
               ⚡ {t('fastMatch') || 'Fast Match'}
             </button>

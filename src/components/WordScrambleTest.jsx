@@ -152,6 +152,9 @@ export default function WordScrambleTest({ phrases, onClose }) {
         >
           {activeSpeed === 'normal' ? '⏹️' : '🔊'} {activeSpeed === 'normal' ? (t('stop') || 'Stop') : t('normalSpeed')}
         </button>
+        <button className="btn btn-danger btn-small" onClick={() => { stopSpeaking(); setActiveSpeed(null); }}>
+          🔇
+        </button>
       </div>
 
       <p className="scramble-hint">{t('scrambleHint')}</p>

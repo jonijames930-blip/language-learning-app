@@ -20,14 +20,18 @@ function cleanWord(text) {
   return text.replace(/[.,!?;:'"()[\]{}]/g, '').trim();
 }
 
-function getTargetLangs(sourceLang) {
+function getTargetLangs(sourceLang, targetLang) {
+  if (targetLang) {
+    const others = ['en', 'fr', 'ar'].filter(l => l !== sourceLang && l !== targetLang);
+    return [targetLang, others[0] || 'en'];
+  }
   if (sourceLang === 'fr') return ['en', 'ar'];
   if (sourceLang === 'en') return ['fr', 'ar'];
   if (sourceLang === 'ar') return ['fr', 'en'];
   return ['en', 'ar'];
 }
 
-export default function GrammarDefenderGame({ phrases, onClose }) {
+export default function GrammarDefenderGame({ phrases, targetLang, onClose }) {
   const { t } = useLanguage();
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(0);
@@ -36,21 +40,22 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
   const [gameOver, setGameOver] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [answered, setAnswered] = useState(false);
-  const [fallProgress, setFallProgress] = useState(0);
   const [paused, setPaused] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [animKey, setAnimKey] = useState(0);
   const wordsPool = useRef([]);
-  const animRef = useRef(null);
   const pausedRef = useRef(false);
-  const startTimeRef = useRef(0);
-  const pausedElapsedRef = useRef(0);
+  const fallTimerRef = useRef(null);
+  const remainingRef = useRef(FALL_DURATION * 1000);
+  const fallStartRef = useRef(0);
+  const roundRef = useRef(0);
 
   useEffect(() => {
     const buildPool = async () => {
       const words = [];
       const seen = new Set();
       const sourceLang = phrases[0]?.lang || 'fr';
-      const [targetLang1, targetLang2] = getTargetLangs(sourceLang);
+      const [targetLang1, targetLang2] = getTargetLangs(sourceLang, targetLang);
 
       phrases.forEach(p => {
         const parts = p.text.split(/\s+/).filter(w => w.length > 1);
@@ -84,7 +89,7 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
       setLoading(false);
     };
     buildPool();
-  }, [phrases]);
+  }, [phrases, targetLang]);
 
   const generateBaskets = useCallback((correctWord, allWords) => {
     const correctBasket = {
@@ -110,47 +115,40 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
     return shuffle([correctBasket, ...wrongBaskets]);
   }, []);
 
+  const handleFallComplete = useCallback((rIdx) => {
+    setAnswered(true);
+    setFeedback('timeout');
+    stopSpeaking();
+    playWrongSound();
+    setTimeout(() => nextRound(rIdx), 1800);
+  }, []);
+
   const startRound = useCallback((roundIdx) => {
     setAnswered(false);
     setFeedback(null);
-    setFallProgress(0);
     pausedRef.current = false;
     setPaused(false);
+    roundRef.current = roundIdx;
 
     const pool = wordsPool.current;
     if (pool.length < 3) return;
     const word = pool[roundIdx % pool.length];
     setCurrentWord(word);
     setBaskets(generateBaskets(word, pool));
+    setAnimKey(prev => prev + 1);
 
     stopSpeaking();
     setTimeout(() => speakLoop(word.text, word.lang, 0.85), 300);
 
-    startTimeRef.current = Date.now();
-    pausedElapsedRef.current = 0;
-    const duration = FALL_DURATION * 1000;
-
-    const animate = () => {
-      if (pausedRef.current) {
-        animRef.current = requestAnimationFrame(animate);
-        return;
+    remainingRef.current = FALL_DURATION * 1000;
+    fallStartRef.current = Date.now();
+    if (fallTimerRef.current) clearTimeout(fallTimerRef.current);
+    fallTimerRef.current = setTimeout(() => {
+      if (!pausedRef.current) {
+        handleFallComplete(roundIdx);
       }
-      const elapsed = (Date.now() - startTimeRef.current) - pausedElapsedRef.current;
-      const progress = Math.min(elapsed / duration, 1);
-      setFallProgress(progress);
-
-      if (progress >= 1) {
-        setAnswered(true);
-        setFeedback('timeout');
-        stopSpeaking();
-        playWrongSound();
-        setTimeout(() => nextRound(roundIdx), 1800);
-        return;
-      }
-      animRef.current = requestAnimationFrame(animate);
-    };
-    animRef.current = requestAnimationFrame(animate);
-  }, [generateBaskets]);
+    }, FALL_DURATION * 1000);
+  }, [generateBaskets, handleFallComplete]);
 
   const nextRound = useCallback((currentRound) => {
     const next = currentRound + 1;
@@ -168,7 +166,7 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
       startRound(0);
     }
     return () => {
-      if (animRef.current) cancelAnimationFrame(animRef.current);
+      if (fallTimerRef.current) clearTimeout(fallTimerRef.current);
       stopSpeaking();
     };
   }, [loading]);
@@ -177,11 +175,19 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
     if (paused) {
       pausedRef.current = false;
       setPaused(false);
-      startTimeRef.current = Date.now() - pausedElapsedRef.current;
+      fallStartRef.current = Date.now();
+      fallTimerRef.current = setTimeout(() => {
+        if (!pausedRef.current) {
+          handleFallComplete(roundRef.current);
+        }
+      }, remainingRef.current);
+      speakLoop(currentWord?.text, currentWord?.lang, 0.85);
     } else {
       pausedRef.current = true;
       setPaused(true);
-      pausedElapsedRef.current = Date.now() - startTimeRef.current;
+      if (fallTimerRef.current) clearTimeout(fallTimerRef.current);
+      const elapsed = Date.now() - fallStartRef.current;
+      remainingRef.current = Math.max(0, remainingRef.current - elapsed);
       stopSpeaking();
     }
   };
@@ -189,7 +195,7 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
   const handleBasketClick = (basket) => {
     if (answered || gameOver || !currentWord || paused) return;
     setAnswered(true);
-    if (animRef.current) cancelAnimationFrame(animRef.current);
+    if (fallTimerRef.current) clearTimeout(fallTimerRef.current);
     stopSpeaking();
 
     if (basket.isCorrect) {
@@ -211,7 +217,6 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
     setGameOver(false);
     setAnswered(false);
     setFeedback(null);
-    setFallProgress(0);
     setPaused(false);
     pausedRef.current = false;
     startRound(0);
@@ -265,11 +270,11 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
   return (
     <div className="grammar-defender-game">
       <div className="game-header">
-        <button className="btn btn-secondary btn-small" onClick={() => { if (animRef.current) cancelAnimationFrame(animRef.current); stopSpeaking(); onClose(); }}>
+        <button className="btn btn-secondary btn-small" onClick={() => { if (fallTimerRef.current) clearTimeout(fallTimerRef.current); stopSpeaking(); onClose(); }}>
           ← {t('back')}
         </button>
         <button className="btn btn-danger btn-small" onClick={handlePause}>
-          {paused ? '▶️' : '⏸️'} {paused ? (t('resume') || 'Resume') : (t('stopSound') || 'Stop')}
+          {paused ? '▶️' : '⏸️'} {paused ? (t('resume') || 'Resume') : (t('pause') || 'Pause')}
         </button>
         <div className="game-info">
           <span className="game-score">⭐ {score}</span>
@@ -278,10 +283,22 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
       </div>
 
       <div className="grammar-fall-area">
-        {currentWord && (
+        {currentWord && !answered && (
           <div
-            className={`grammar-word ${answered ? (feedback === 'correct' ? 'grammar-word-correct' : 'grammar-word-wrong') : ''}`}
-            style={{ top: `${fallProgress * 75}%` }}
+            key={animKey}
+            className={`grammar-word grammar-word-animated`}
+            style={{
+              animationDuration: `${FALL_DURATION}s`,
+              animationPlayState: paused ? 'paused' : 'running',
+            }}
+          >
+            {currentWord.text}
+          </div>
+        )}
+        {currentWord && answered && (
+          <div
+            className={`grammar-word ${feedback === 'correct' ? 'grammar-word-correct' : 'grammar-word-wrong'}`}
+            style={{ top: '75%' }}
           >
             {currentWord.text}
           </div>
@@ -292,6 +309,11 @@ export default function GrammarDefenderGame({ phrases, onClose }) {
       {feedback === 'wrong' && (
         <div className="game-feedback wrong-feedback">
           ✗ {currentWord?.trans1} / {currentWord?.trans2}
+        </div>
+      )}
+      {feedback === 'timeout' && (
+        <div className="game-feedback wrong-feedback">
+          ⏰ {currentWord?.trans1} / {currentWord?.trans2}
         </div>
       )}
 

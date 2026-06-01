@@ -20,7 +20,7 @@ function cleanWord(text) {
   return text.replace(/[.,!?;:'"()[\]{}]/g, '').trim();
 }
 
-export default function FastMatchGame({ phrases, onClose }) {
+export default function FastMatchGame({ phrases, targetLang: targetLangProp, onClose }) {
   const { t } = useLanguage();
   const [score, setScore] = useState(0);
   const [round, setRound] = useState(0);
@@ -54,9 +54,10 @@ export default function FastMatchGame({ phrases, onClose }) {
       const translatedWords = [];
       for (const w of words.slice(0, 16)) {
         try {
-          const result = await translateText(w.text, w.lang, 'ar');
+          const tgtLang = targetLangProp || (w.lang === 'ar' ? 'fr' : 'ar');
+          const result = await translateText(w.text, w.lang, tgtLang);
           if (result.translation && result.translation !== w.text) {
-            translatedWords.push({ ...w, arabic: result.translation });
+            translatedWords.push({ ...w, arabic: result.translation, tgtLang: tgtLang });
           }
         } catch { /* skip */ }
       }
@@ -84,7 +85,7 @@ export default function FastMatchGame({ phrases, onClose }) {
     }
 
     setLeftColumn(shuffle(roundWords.map(w => ({ id: w.text, text: w.text, lang: w.lang }))));
-    setRightColumn(shuffle(roundWords.map(w => ({ id: w.text, text: w.arabic, matchId: w.text }))));
+    setRightColumn(shuffle(roundWords.map(w => ({ id: w.text, text: w.arabic, matchId: w.text, lang: w.tgtLang || 'ar' }))));
 
     if (timerRef.current) clearInterval(timerRef.current);
     let remaining = TIME_LIMIT;
@@ -131,7 +132,7 @@ export default function FastMatchGame({ phrases, onClose }) {
   const handleRightClick = (item) => {
     if (!selectedLeft || matched.includes(item.matchId)) return;
     stopSpeaking();
-    speakLoop(item.text, 'ar', 0.85);
+    speakLoop(item.text, item.lang || targetLangProp || 'ar', 0.85);
 
     if (selectedLeft.id === item.matchId) {
       setMatched(prev => {
@@ -214,8 +215,11 @@ export default function FastMatchGame({ phrases, onClose }) {
   return (
     <div className="fast-match-game">
       <div className="game-header">
-        <button className="btn btn-secondary btn-small" onClick={() => { if (timerRef.current) clearInterval(timerRef.current); onClose(); }}>
+        <button className="btn btn-secondary btn-small" onClick={() => { if (timerRef.current) clearInterval(timerRef.current); stopSpeaking(); onClose(); }}>
           ← {t('back')}
+        </button>
+        <button className="btn btn-danger btn-small" onClick={() => stopSpeaking()}>
+          🔇
         </button>
         <div className="game-info">
           <span className="game-score">⭐ {score}</span>

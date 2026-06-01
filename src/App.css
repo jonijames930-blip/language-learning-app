@@ -2208,7 +2208,17 @@ body {
   font-size: 1.3rem;
   font-weight: 700;
   box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
-  transition: top 0.1s linear;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.grammar-word-animated {
+  animation: grammarFallDown linear forwards;
+}
+
+@keyframes grammarFallDown {
+  from { top: 0%; }
+  to { top: 75%; }
 }
 
 .grammar-word-correct {
@@ -2306,6 +2316,59 @@ body {
 .stop-sound-btn {
   width: 100%;
   margin-top: 8px;
+}
+
+/* ========== Pre-Game Settings ========== */
+.pre-game-settings {
+  max-width: 400px;
+  margin: 40px auto;
+  padding: 24px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.pre-game-settings h2 {
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+}
+
+.pre-game-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  justify-content: center;
+}
+
+.pre-game-field label {
+  font-weight: 600;
+  min-width: 120px;
+  text-align: right;
+}
+
+.pre-game-field select {
+  flex: 1;
+  max-width: 180px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.pre-game-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.pre-game-actions .btn-primary {
+  min-width: 120px;
+  font-size: 1.1rem;
 }
 
 /* ========== Fast Match Game ========== */

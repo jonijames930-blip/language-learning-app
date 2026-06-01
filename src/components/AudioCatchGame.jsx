@@ -198,6 +198,9 @@ export default function AudioCatchGame({ phrases, onClose }) {
         <button className="btn btn-secondary btn-small" onClick={() => { stopSpeaking(); if (timerRef.current) clearInterval(timerRef.current); onClose(); }}>
           ← {t('back')}
         </button>
+        <button className="btn btn-danger btn-small" onClick={() => stopSpeaking()}>
+          🔇
+        </button>
         <div className="game-info">
           <span className="game-score">⭐ {score}</span>
           <span className="game-round">{round + 1}/{maxRounds}</span>
