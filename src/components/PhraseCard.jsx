@@ -44,7 +44,7 @@ function ContextSpeakBtn({ text, lang }) {
   );
 }
 
-export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
+export default function PhraseCard({ sentence, lang, onDelete, showDelete, showWords = true }) {
   const { t } = useLanguage();
   const [activeSpeed, setActiveSpeed] = useState(null);
   const [showDrawing, setShowDrawing] = useState(false);
@@ -150,11 +150,13 @@ export default function PhraseCard({ sentence, lang, onDelete, showDelete }) {
         </div>
       )}
 
-      <div className="words-container">
-        {wordsWithLang.map((w, index) => (
-          <WordCard key={`${w.text}-${index}`} word={w.text} lang={w.lang} onStopPhrase={handleStop} />
-        ))}
-      </div>
+      {showWords && (
+        <div className="words-container">
+          {wordsWithLang.map((w, index) => (
+            <WordCard key={`${w.text}-${index}`} word={w.text} lang={w.lang} onStopPhrase={handleStop} />
+          ))}
+        </div>
+      )}
 
       {showDrawing && (
         <DrawingCanvas

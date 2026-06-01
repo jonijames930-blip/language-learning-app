@@ -692,6 +692,53 @@ body {
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
+.phrase-edit-wrapper {
+  position: relative;
+}
+
+.phrase-edit-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+}
+
+.rtl .phrase-edit-btn {
+  left: auto;
+  right: 8px;
+}
+
+.edit-sentence-row {
+  padding: 12px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 8px;
+}
+
+.input-edit-sentence {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.input-edit-sentence:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.edit-sentence-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .study-lang-selector {
   display: flex;
   align-items: center;

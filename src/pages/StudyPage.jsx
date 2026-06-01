@@ -45,6 +45,8 @@ export default function StudyPage() {
   const [editName, setEditName] = useState('');
   const [notification, setNotification] = useState('');
   const [langOverride, setLangOverride] = useState('auto');
+  const [editingSentenceIdx, setEditingSentenceIdx] = useState(null);
+  const [editSentenceText, setEditSentenceText] = useState('');
 
   const handleSelectLesson = (lesson) => {
     setSelectedLesson(lesson);
@@ -57,6 +59,25 @@ export default function StudyPage() {
     setLessons(updated);
     setSelectedLesson({ ...selectedLesson, name: editName.trim() });
     setEditingName(false);
+    setNotification(t('updateSuccess'));
+    setTimeout(() => setNotification(''), 3000);
+  };
+
+  const handleEditSentence = (index) => {
+    setEditingSentenceIdx(index);
+    setEditSentenceText(selectedLesson.sentences[index]);
+  };
+
+  const handleSaveSentence = () => {
+    if (editingSentenceIdx === null || !selectedLesson) return;
+    const newSentences = [...selectedLesson.sentences];
+    newSentences[editingSentenceIdx] = editSentenceText.trim();
+    const newPhraseLangs = newSentences.map(s => detectLanguage(s));
+    const updated = updateLesson(selectedLesson.id, { sentences: newSentences, phraseLangs: newPhraseLangs });
+    setLessons(updated);
+    setSelectedLesson(updated.find(l => l.id === selectedLesson.id));
+    setEditingSentenceIdx(null);
+    setEditSentenceText('');
     setNotification(t('updateSuccess'));
     setTimeout(() => setNotification(''), 3000);
   };
@@ -204,6 +225,12 @@ export default function StudyPage() {
             </button>
             <button
               className="btn btn-accent"
+              onClick={() => setTestMode('words')}
+            >
+              🎧 {t('wordListeningTest')}
+            </button>
+            <button
+              className="btn btn-accent"
               onClick={() => setTestMode('scramble')}
             >
               🧩 {t('wordScramble')}
@@ -225,12 +252,41 @@ export default function StudyPage() {
 
         <div className="phrases-section">
           {phrases.map((phrase, index) => (
-            <PhraseCard
-              key={`${phrase.text}-${index}-${phrase.lang}`}
-              sentence={phrase.text}
-              lang={phrase.lang}
-              showDelete={false}
-            />
+            <div key={`${phrase.text}-${index}-${phrase.lang}`} className="phrase-edit-wrapper">
+              {editingSentenceIdx === index ? (
+                <div className="edit-sentence-row">
+                  <textarea
+                    value={editSentenceText}
+                    onChange={(e) => setEditSentenceText(e.target.value)}
+                    className="input-edit-sentence"
+                    autoFocus
+                    rows={2}
+                  />
+                  <div className="edit-sentence-actions">
+                    <button className="btn btn-primary btn-small" onClick={handleSaveSentence}>{t('save')}</button>
+                    <button className="btn btn-secondary btn-small" onClick={() => setEditingSentenceIdx(null)}>{t('cancel')}</button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="phrase-edit-btn">
+                    <button
+                      className="btn-icon btn-icon-sm"
+                      onClick={() => handleEditSentence(index)}
+                      title={t('editName') || 'Edit'}
+                    >
+                      ✏️
+                    </button>
+                  </div>
+                  <PhraseCard
+                    sentence={phrase.text}
+                    lang={phrase.lang}
+                    showDelete={false}
+                    showWords={false}
+                  />
+                </>
+              )}
+            </div>
           ))}
         </div>
       </div>
