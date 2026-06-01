@@ -2569,10 +2569,37 @@ body {
 }
 
 /* Delete sentence button */
+.phrase-edit-btn {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
 .btn-delete-sentence {
   color: var(--danger) !important;
   opacity: 0.7;
 }
 .btn-delete-sentence:hover {
   opacity: 1;
+}
+
+/* Spell out button in lessons */
+.spell-btn {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.spell-btn:hover {
+  background: var(--primary);
+  color: white;
+}
+.spell-btn.spelling-active {
+  background: var(--primary);
+  color: white;
 }

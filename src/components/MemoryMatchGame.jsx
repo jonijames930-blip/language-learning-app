@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { translateText } from '../utils/translate';
 import { speakLoop, stopSpeaking } from '../utils/speech';
 import { playCorrectSound, playWrongSound } from '../utils/sounds';
 
-const TIME_LIMIT = 30;
 const GRID_SIZE = 12;
 
 function shuffle(arr) {
@@ -35,13 +34,11 @@ export default function MemoryMatchGame({ phrases, targetLang, onClose }) {
   const [moves, setMoves] = useState(0);
   const [score, setScore] = useState(0);
   const [combo, setCombo] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
   const [loading, setLoading] = useState(true);
   const [paused, setPaused] = useState(false);
   const [comboFlash, setComboFlash] = useState(false);
-  const timerRef = useRef(null);
   const pausedRef = useRef(false);
   const lockRef = useRef(false);
   const pairCountRef = useRef(0);
@@ -85,31 +82,11 @@ export default function MemoryMatchGame({ phrases, targetLang, onClose }) {
     buildCards();
   }, [phrases, targetLang]);
 
-  const startTimer = useCallback(() => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => {
-      if (pausedRef.current) return;
-      setTimeLeft(prev => {
-        if (prev <= 0.1) {
-          clearInterval(timerRef.current);
-          setGameOver(true);
-          stopSpeaking();
-          return 0;
-        }
-        return prev - 0.1;
-      });
-    }, 100);
-  }, []);
-
   useEffect(() => {
-    if (!loading && cards.length >= 4) {
-      startTimer();
-    }
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
       stopSpeaking();
     };
-  }, [loading, cards.length, startTimer]);
+  }, []);
 
   const handlePause = () => {
     if (paused) {
@@ -155,7 +132,6 @@ export default function MemoryMatchGame({ phrases, targetLang, onClose }) {
 
         if (newMatched.length === pairCountRef.current) {
           setGameWon(true);
-          if (timerRef.current) clearInterval(timerRef.current);
           stopSpeaking();
         }
 
@@ -181,16 +157,13 @@ export default function MemoryMatchGame({ phrases, targetLang, onClose }) {
     setMoves(0);
     setScore(0);
     setCombo(0);
-    setTimeLeft(TIME_LIMIT);
     setGameOver(false);
     setGameWon(false);
     setPaused(false);
     pausedRef.current = false;
     lockRef.current = false;
-    startTimer();
   };
 
-  const timerPercent = (timeLeft / TIME_LIMIT) * 100;
   const stars = getStars(moves, pairCountRef.current);
 
   if (loading) {
@@ -220,7 +193,7 @@ export default function MemoryMatchGame({ phrases, targetLang, onClose }) {
     return (
       <div className="memory-match-game">
         <div className="game-over-screen">
-          <h2>{gameWon ? '🎉' : '⏰'} {gameWon ? (t('testComplete') || 'Complete!') : (t('timeUp') || "Time's up!")}</h2>
+          <h2>🎉 {t('testComplete') || 'Complete!'}</h2>
           {gameWon && (
             <div className="star-rating">
               {[1, 2, 3].map(s => (
@@ -249,7 +222,7 @@ export default function MemoryMatchGame({ phrases, targetLang, onClose }) {
   return (
     <div className="memory-match-game">
       <div className="game-header">
-        <button className="btn btn-secondary btn-small" onClick={() => { if (timerRef.current) clearInterval(timerRef.current); stopSpeaking(); onClose(); }}>
+        <button className="btn btn-secondary btn-small" onClick={() => { stopSpeaking(); onClose(); }}>
           ✕ {t('close') || 'Fermer'}
         </button>
         <button className="btn btn-accent btn-small" onClick={handlePause}>
@@ -259,13 +232,6 @@ export default function MemoryMatchGame({ phrases, targetLang, onClose }) {
           <span className="game-score">⭐ {score}</span>
           <span className="game-round">{moves} {t('moves') || 'moves'}</span>
         </div>
-      </div>
-
-      <div className="timer-bar">
-        <div
-          className={`timer-fill ${timeLeft < 5 ? 'timer-danger' : ''}`}
-          style={{ width: `${timerPercent}%` }}
-        />
       </div>
 
       {comboFlash && (

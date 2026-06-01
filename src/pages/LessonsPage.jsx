@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { getLessons, deleteLesson, deleteSentenceFromLesson, updateLesson } from '../utils/storage';
-import { detectLanguage } from '../utils/speech';
+import { detectLanguage, speak, stopSpeaking } from '../utils/speech';
 import PhraseCard from '../components/PhraseCard';
 import ConfirmDialog from '../components/ConfirmDialog';
 
@@ -14,6 +14,23 @@ export default function LessonsPage() {
   const [filterTag, setFilterTag] = useState('');
   const [editingLessonId, setEditingLessonId] = useState(null);
   const [editLessonName, setEditLessonName] = useState('');
+  const [spellingWord, setSpellingWord] = useState(null);
+
+  const spellOutWord = async (wordKey, actualWord, lang) => {
+    stopSpeaking();
+    if (spellingWord === wordKey) { setSpellingWord(null); return; }
+    setSpellingWord(wordKey);
+    const clean = actualWord.replace(/[.,!?;:'"()[\]{}]/g, '');
+    const letters = clean.split('');
+    for (let i = 0; i < letters.length; i++) {
+      if (letters[i].trim() === '') continue;
+      await new Promise(resolve => {
+        speak(letters[i], lang, 0.8, resolve);
+      });
+      await new Promise(r => setTimeout(r, 400));
+    }
+    setSpellingWord(null);
+  };
 
   const allTags = [...new Set(lessons.map(l => l.tag).filter(Boolean))];
 
@@ -81,15 +98,34 @@ export default function LessonsPage() {
         {notification && <div className="notification success">{notification}</div>}
 
         <div className="phrases-section">
-          {selectedLesson.sentences.map((sentence, index) => (
-            <PhraseCard
-              key={`${sentence}-${index}`}
-              sentence={sentence}
-              lang={selectedLesson.phraseLangs?.[index] || detectLanguage(sentence)}
-              showDelete={true}
-              onDelete={() => handleDeleteSentence(selectedLesson.id, index)}
-            />
-          ))}
+          {selectedLesson.sentences.map((sentence, index) => {
+            const lang = selectedLesson.phraseLangs?.[index] || detectLanguage(sentence);
+            const words = sentence.split(/\s+/).filter(w => w.length > 0);
+            return (
+              <div key={`${sentence}-${index}`}>
+                <PhraseCard
+                  sentence={sentence}
+                  lang={lang}
+                  showDelete={true}
+                  onDelete={() => handleDeleteSentence(selectedLesson.id, index)}
+                />
+                <div className="word-spell-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '4px 8px', marginBottom: '8px' }}>
+                  {words.map((word, wi) => {
+                    const wordKey = `${word}-${index}-${wi}`;
+                    return (
+                      <button
+                        key={wi}
+                        className={`spell-btn ${spellingWord === wordKey ? 'spelling-active' : ''}`}
+                        onClick={() => spellOutWord(wordKey, word, lang)}
+                      >
+                        🔤 {word}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {confirmAction && (
