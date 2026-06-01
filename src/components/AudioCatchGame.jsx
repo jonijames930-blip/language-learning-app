@@ -31,7 +31,11 @@ export default function AudioCatchGame({ phrases, onClose }) {
   const [totalRounds, setTotalRounds] = useState(0);
   const [feedback, setFeedback] = useState(null);
   const [showCorrectAnswer, setShowCorrectAnswer] = useState(null);
+  const [paused, setPaused] = useState(false);
   const timerRef = useRef(null);
+  const pausedRef = useRef(false);
+  const remainingRef = useRef(ROUND_TIME * 1000);
+  const timerStartRef = useRef(0);
   const roundRef = useRef(0);
   const wordsPool = useRef([]);
 
@@ -80,13 +84,19 @@ export default function AudioCatchGame({ phrases, onClose }) {
     }));
     setBubbles(bubblesData);
 
+    setPaused(false);
+    pausedRef.current = false;
+    remainingRef.current = ROUND_TIME * 1000;
+
     setTimeout(() => {
       speakLoop(correct.text, correct.lang, 0.85);
     }, 500);
 
     if (timerRef.current) clearInterval(timerRef.current);
     let remaining = ROUND_TIME;
+    timerStartRef.current = Date.now();
     timerRef.current = setInterval(() => {
+      if (pausedRef.current) return;
       remaining -= 0.1;
       if (remaining <= 0) {
         clearInterval(timerRef.current);
@@ -116,6 +126,18 @@ export default function AudioCatchGame({ phrases, onClose }) {
       startRound(next);
     }
   }, [startRound]);
+
+  const handlePause = () => {
+    if (paused) {
+      pausedRef.current = false;
+      setPaused(false);
+      if (correctWord) speakLoop(correctWord.text, correctWord.lang, 0.85);
+    } else {
+      pausedRef.current = true;
+      setPaused(true);
+      stopSpeaking();
+    }
+  };
 
   useEffect(() => {
     if (wordsPool.current.length >= 2 && totalRounds > 0 && !gameOver) {
@@ -196,10 +218,10 @@ export default function AudioCatchGame({ phrases, onClose }) {
     <div className="audio-catch-game">
       <div className="game-header">
         <button className="btn btn-secondary btn-small" onClick={() => { stopSpeaking(); if (timerRef.current) clearInterval(timerRef.current); onClose(); }}>
-          ← {t('back')}
+          ✕ {t('close') || 'Fermer'}
         </button>
-        <button className="btn btn-danger btn-small" onClick={() => stopSpeaking()}>
-          🔇
+        <button className="btn btn-accent btn-small" onClick={handlePause} disabled={answered || gameOver}>
+          {paused ? '▶️' : '⏸️'} {paused ? (t('resume') || 'Reprendre') : (t('pause') || 'Pause')}
         </button>
         <div className="game-info">
           <span className="game-score">⭐ {score}</span>

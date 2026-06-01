@@ -128,6 +128,8 @@ const translations = {
     fastMatch: 'مطابقة سريعة',
     matchHint: 'طابق كل كلمة بترجمتها',
     stopSound: 'إيقاف الصوت',
+    memoryMatch: 'بطاقات الذاكرة',
+    moves: 'حركات',
   },
   fr: {
     appTitle: 'Apprendre les langues',
@@ -258,6 +260,8 @@ const translations = {
     stopSound: 'Arrêter le son',
     loading: 'Chargement...',
     notEnoughWords: 'Pas assez de mots pour ce jeu',
+    memoryMatch: 'Cartes Mémoire',
+    moves: 'mouvements',
   },
   en: {
     appTitle: 'Language Learning',
@@ -388,6 +392,8 @@ const translations = {
     stopSound: 'Stop Sound',
     loading: 'Loading...',
     notEnoughWords: 'Not enough words for this game',
+    memoryMatch: 'Memory Match',
+    moves: 'moves',
   },
 };
 

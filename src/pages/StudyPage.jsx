@@ -8,6 +8,8 @@ import WordScrambleTest from '../components/WordScrambleTest';
 import AudioCatchGame from '../components/AudioCatchGame';
 import GrammarDefenderGame from '../components/GrammarDefenderGame';
 import FastMatchGame from '../components/FastMatchGame';
+import MemoryMatchGame from '../components/MemoryMatchGame';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 function buildPhrases(lesson, langOverride) {
   return lesson.sentences.map((s, i) => {
@@ -51,6 +53,7 @@ export default function StudyPage() {
   const [preGameMode, setPreGameMode] = useState(null);
   const [gameSourceLang, setGameSourceLang] = useState('');
   const [gameTargetLang, setGameTargetLang] = useState('');
+  const [deleteSentenceIdx, setDeleteSentenceIdx] = useState(null);
 
   const handleSelectLesson = (lesson) => {
     setSelectedLesson(lesson);
@@ -83,6 +86,19 @@ export default function StudyPage() {
     setEditingSentenceIdx(null);
     setEditSentenceText('');
     setNotification(t('updateSuccess'));
+    setTimeout(() => setNotification(''), 3000);
+  };
+
+  const handleDeleteSentence = () => {
+    if (deleteSentenceIdx === null || !selectedLesson) return;
+    const newSentences = selectedLesson.sentences.filter((_, i) => i !== deleteSentenceIdx);
+    if (newSentences.length === 0) return;
+    const newPhraseLangs = newSentences.map(s => detectLanguage(s));
+    const updated = updateLesson(selectedLesson.id, { sentences: newSentences, phraseLangs: newPhraseLangs });
+    setLessons(updated);
+    setSelectedLesson(updated.find(l => l.id === selectedLesson.id));
+    setDeleteSentenceIdx(null);
+    setNotification(t('sentenceDeleted') || 'Sentence deleted');
     setTimeout(() => setNotification(''), 3000);
   };
 
@@ -173,7 +189,7 @@ export default function StudyPage() {
         <div className="page study-page">
           <WordScrambleTest
             phrases={nonArabic}
-            onClose={() => { setTestMode(null); setPreGameMode(null); }}
+            onClose={() => { stopSpeaking(); setTestMode(null); setPreGameMode(null); }}
           />
         </div>
       );
@@ -184,7 +200,7 @@ export default function StudyPage() {
         <div className="page study-page">
           <AudioCatchGame
             phrases={nonArabic}
-            onClose={() => { setTestMode(null); setPreGameMode(null); }}
+            onClose={() => { stopSpeaking(); setTestMode(null); setPreGameMode(null); }}
           />
         </div>
       );
@@ -196,7 +212,7 @@ export default function StudyPage() {
           <GrammarDefenderGame
             phrases={nonArabic}
             targetLang={tgtLangFinal}
-            onClose={() => { setTestMode(null); setPreGameMode(null); }}
+            onClose={() => { stopSpeaking(); setTestMode(null); setPreGameMode(null); }}
           />
         </div>
       );
@@ -208,7 +224,19 @@ export default function StudyPage() {
           <FastMatchGame
             phrases={nonArabic}
             targetLang={tgtLangFinal}
-            onClose={() => { setTestMode(null); setPreGameMode(null); }}
+            onClose={() => { stopSpeaking(); setTestMode(null); setPreGameMode(null); }}
+          />
+        </div>
+      );
+    }
+
+    if (testMode === 'memorymatch') {
+      return (
+        <div className="page study-page">
+          <MemoryMatchGame
+            phrases={nonArabic}
+            targetLang={tgtLangFinal}
+            onClose={() => { stopSpeaking(); setTestMode(null); setPreGameMode(null); }}
           />
         </div>
       );
@@ -315,10 +343,10 @@ export default function StudyPage() {
               ⚡ {t('fastMatch') || 'Fast Match'}
             </button>
             <button
-              className="btn btn-danger btn-small stop-sound-btn"
-              onClick={() => stopSpeaking()}
+              className="btn btn-accent"
+              onClick={() => { setPreGameMode('memorymatch'); const dl = langOverride !== 'auto' ? langOverride : (selectedLesson.phraseLangs?.[0] || 'fr'); setGameSourceLang(dl); setGameTargetLang(dl === 'fr' ? 'en' : 'fr'); }}
             >
-              🔇 {t('stopSound') || 'Stop Sound'}
+              🎤 {t('memoryMatch') || 'Memory Match'}
             </button>
           </div>
         )}
@@ -350,6 +378,13 @@ export default function StudyPage() {
                     >
                       ✏️
                     </button>
+                    <button
+                      className="btn-icon btn-icon-sm btn-delete-sentence"
+                      onClick={() => setDeleteSentenceIdx(index)}
+                      title={t('deleteSentence') || 'Delete'}
+                    >
+                      🗑️
+                    </button>
                   </div>
                   <PhraseCard
                     sentence={phrase.text}
@@ -362,6 +397,14 @@ export default function StudyPage() {
             </div>
           ))}
         </div>
+
+        {deleteSentenceIdx !== null && (
+          <ConfirmDialog
+            message={t('confirmDeleteSentence') || 'Are you sure you want to delete this sentence?'}
+            onConfirm={handleDeleteSentence}
+            onCancel={() => setDeleteSentenceIdx(null)}
+          />
+        )}
       </div>
     );
   }

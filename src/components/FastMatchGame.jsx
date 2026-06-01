@@ -33,8 +33,10 @@ export default function FastMatchGame({ phrases, targetLang: targetLangProp, onC
   const [matched, setMatched] = useState([]);
   const [wrongPair, setWrongPair] = useState(null);
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
+  const [paused, setPaused] = useState(false);
   const wordsPool = useRef([]);
   const timerRef = useRef(null);
+  const pausedRef = useRef(false);
 
   useEffect(() => {
     const buildPool = async () => {
@@ -75,6 +77,8 @@ export default function FastMatchGame({ phrases, targetLang: targetLangProp, onC
     setMatched([]);
     setWrongPair(null);
     setTimeLeft(TIME_LIMIT);
+    setPaused(false);
+    pausedRef.current = false;
 
     const pool = wordsPool.current;
     const start = roundIdx * MATCH_COUNT;
@@ -90,6 +94,7 @@ export default function FastMatchGame({ phrases, targetLang: targetLangProp, onC
     if (timerRef.current) clearInterval(timerRef.current);
     let remaining = TIME_LIMIT;
     timerRef.current = setInterval(() => {
+      if (pausedRef.current) return;
       remaining -= 0.1;
       if (remaining <= 0) {
         clearInterval(timerRef.current);
@@ -112,12 +117,24 @@ export default function FastMatchGame({ phrases, targetLang: targetLangProp, onC
     }
   };
 
+  const handlePause = () => {
+    if (paused) {
+      pausedRef.current = false;
+      setPaused(false);
+    } else {
+      pausedRef.current = true;
+      setPaused(true);
+      stopSpeaking();
+    }
+  };
+
   useEffect(() => {
     if (!loading && totalRounds > 0) {
       startRound(0);
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      stopSpeaking();
     };
   }, [loading, totalRounds]);
 
@@ -216,10 +233,10 @@ export default function FastMatchGame({ phrases, targetLang: targetLangProp, onC
     <div className="fast-match-game">
       <div className="game-header">
         <button className="btn btn-secondary btn-small" onClick={() => { if (timerRef.current) clearInterval(timerRef.current); stopSpeaking(); onClose(); }}>
-          ← {t('back')}
+          ✕ {t('close') || 'Fermer'}
         </button>
-        <button className="btn btn-danger btn-small" onClick={() => stopSpeaking()}>
-          🔇
+        <button className="btn btn-accent btn-small" onClick={handlePause}>
+          {paused ? '▶️' : '⏸️'} {paused ? (t('resume') || 'Reprendre') : (t('pause') || 'Pause')}
         </button>
         <div className="game-info">
           <span className="game-score">⭐ {score}</span>

@@ -138,7 +138,12 @@ export default function GrammarDefenderGame({ phrases, targetLang, onClose }) {
     setAnimKey(prev => prev + 1);
 
     stopSpeaking();
-    setTimeout(() => speakLoop(word.text, word.lang, 0.85), 300);
+    setTimeout(() => {
+      speakLoop(word.text, word.lang, 0.85);
+      setTimeout(() => {
+        if (!pausedRef.current) speakLoop(word.trans1, word.trans1Lang, 0.85);
+      }, 2000);
+    }, 300);
 
     remainingRef.current = FALL_DURATION * 1000;
     fallStartRef.current = Date.now();
@@ -182,6 +187,9 @@ export default function GrammarDefenderGame({ phrases, targetLang, onClose }) {
         }
       }, remainingRef.current);
       speakLoop(currentWord?.text, currentWord?.lang, 0.85);
+      setTimeout(() => {
+        if (!pausedRef.current) speakLoop(currentWord?.trans1, currentWord?.trans1Lang, 0.85);
+      }, 2000);
     } else {
       pausedRef.current = true;
       setPaused(true);
@@ -271,10 +279,10 @@ export default function GrammarDefenderGame({ phrases, targetLang, onClose }) {
     <div className="grammar-defender-game">
       <div className="game-header">
         <button className="btn btn-secondary btn-small" onClick={() => { if (fallTimerRef.current) clearTimeout(fallTimerRef.current); stopSpeaking(); onClose(); }}>
-          ← {t('back')}
+          ✕ {t('close') || 'Fermer'}
         </button>
-        <button className="btn btn-danger btn-small" onClick={handlePause}>
-          {paused ? '▶️' : '⏸️'} {paused ? (t('resume') || 'Resume') : (t('pause') || 'Pause')}
+        <button className="btn btn-accent btn-small" onClick={handlePause}>
+          {paused ? '▶️' : '⏸️'} {paused ? (t('resume') || 'Reprendre') : (t('pause') || 'Pause')}
         </button>
         <div className="game-info">
           <span className="game-score">⭐ {score}</span>

@@ -126,7 +126,7 @@ export default function WordScrambleTest({ phrases, onClose }) {
         </div>
         <div className="test-actions">
           <button className="btn btn-primary" onClick={restartTest}>{t('tryAgain')}</button>
-          <button className="btn btn-secondary" onClick={handleClose}>{t('close')}</button>
+          <button className="btn btn-secondary" onClick={handleClose}>✕ {t('close') || 'Fermer'}</button>
         </div>
       </div>
     );
@@ -152,9 +152,7 @@ export default function WordScrambleTest({ phrases, onClose }) {
         >
           {activeSpeed === 'normal' ? '⏹️' : '🔊'} {activeSpeed === 'normal' ? (t('stop') || 'Stop') : t('normalSpeed')}
         </button>
-        <button className="btn btn-danger btn-small" onClick={() => { stopSpeaking(); setActiveSpeed(null); }}>
-          🔇
-        </button>
+
       </div>
 
       <p className="scramble-hint">{t('scrambleHint')}</p>
@@ -207,7 +205,7 @@ export default function WordScrambleTest({ phrases, onClose }) {
             {currentIndex + 1 >= phrases.length ? t('results') : t('nextWord')}
           </button>
         )}
-        <button className="btn btn-secondary" onClick={handleClose}>{t('close')}</button>
+        <button className="btn btn-secondary" onClick={handleClose}>✕ {t('close') || 'Fermer'}</button>
       </div>
     </div>
   );

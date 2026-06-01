@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { useLanguage } from '../context/useLanguage';
 import { speakLoop, stopSpeaking, parseWordsWithLang } from '../utils/speech';
 import { playCorrectSound, playWrongSound } from '../utils/sounds';
-import { showRewarded, showInterstitialOnLessonComplete } from '../utils/admob';
+
 
 export default function ListeningTest({ phrases, onClose, testType }) {
   const { t } = useLanguage();
@@ -60,7 +60,7 @@ export default function ListeningTest({ phrases, onClose, testType }) {
       setTestComplete(true);
       stopSpeaking();
       setActiveSpeed(null);
-      showInterstitialOnLessonComplete();
+
     } else {
       setCurrentIndex(currentIndex + 1);
       setUserAnswer('');
@@ -70,11 +70,8 @@ export default function ListeningTest({ phrases, onClose, testType }) {
     }
   };
 
-  const handleUnlockHint = async () => {
-    const rewarded = await showRewarded();
-    if (rewarded) {
-      setHintUnlocked(true);
-    }
+  const handleUnlockHint = () => {
+    setHintUnlocked(true);
   };
 
   const skipItem = () => {

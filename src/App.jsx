@@ -5,7 +5,6 @@ import LessonsPage from './pages/LessonsPage';
 import StudyPage from './pages/StudyPage';
 import TranslatePage from './pages/TranslatePage';
 import SettingsPage from './pages/SettingsPage';
-import { showBanner, hideBanner, prepareInterstitial, prepareRewarded } from './utils/admob';
 import './App.css';
 
 const LESSON_TABS = ['lessons', 'study'];
@@ -14,18 +13,6 @@ function App() {
   const [activeTab, setActiveTab] = useState('input');
   const { t, isRTL } = useLanguage();
 
-  useEffect(() => {
-    prepareInterstitial();
-    prepareRewarded();
-  }, []);
-
-  useEffect(() => {
-    if (LESSON_TABS.includes(activeTab)) {
-      showBanner();
-    } else {
-      hideBanner();
-    }
-  }, [activeTab]);
 
   const tabs = [
     { id: 'input', label: t('inputTab'), icon: '✏️' },
